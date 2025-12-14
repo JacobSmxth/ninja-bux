@@ -38,6 +38,12 @@ public class Ninja {
   @Column(name = "activity_type")
   private String activityType;
 
+  @Column(name = "last_activity_id")
+  private String lastActivityId;
+
+  @Column(name = "last_activity_updated_at")
+  private LocalDateTime lastActivityUpdatedAt;
+
   @Column(name = "current_balance", nullable = false)
   private Integer currentBalance = 0;
 
@@ -126,6 +132,22 @@ public class Ninja {
 
   public void setActivityType(String activityType) {
     this.activityType = activityType;
+  }
+
+  public String getLastActivityId() {
+    return lastActivityId;
+  }
+
+  public void setLastActivityId(String lastActivityId) {
+    this.lastActivityId = lastActivityId;
+  }
+
+  public LocalDateTime getLastActivityUpdatedAt() {
+    return lastActivityUpdatedAt;
+  }
+
+  public void setLastActivityUpdatedAt(LocalDateTime lastActivityUpdatedAt) {
+    this.lastActivityUpdatedAt = lastActivityUpdatedAt;
   }
 
   public Integer getCurrentBalance() {

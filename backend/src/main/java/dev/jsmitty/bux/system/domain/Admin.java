@@ -34,6 +34,9 @@ public class Admin {
       inverseJoinColumns = @JoinColumn(name = "facility_id"))
   private Set<Facility> facilities = new HashSet<>();
 
+  @Column(name = "super_admin", nullable = false)
+  private boolean superAdmin = false;
+
   @Column(name = "created_at", nullable = false)
   private LocalDateTime createdAt;
 
@@ -84,6 +87,14 @@ public class Admin {
 
   public void setFacilities(Set<Facility> facilities) {
     this.facilities = facilities;
+  }
+
+  public boolean isSuperAdmin() {
+    return superAdmin;
+  }
+
+  public void setSuperAdmin(boolean superAdmin) {
+    this.superAdmin = superAdmin;
   }
 
   public void addFacility(Facility facility) {

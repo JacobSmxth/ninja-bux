@@ -25,6 +25,9 @@ public class FacilityAccessChecker {
 
   public void checkFacilityAccess(UUID facilityId) {
     AdminUserDetails admin = getCurrentAdmin();
+    if (admin.isSuperAdmin()) {
+      return;
+    }
     if (!admin.getFacilityIds().contains(facilityId)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to this facility");
     }

@@ -21,6 +21,10 @@ public class AdminUserDetails implements UserDetails {
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
+    if (admin.isSuperAdmin()) {
+      return List.of(
+          new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
+    }
     return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
   }
 
@@ -64,5 +68,9 @@ public class AdminUserDetails implements UserDetails {
 
   public Admin getAdmin() {
     return admin;
+  }
+
+  public boolean isSuperAdmin() {
+    return admin.isSuperAdmin();
   }
 }

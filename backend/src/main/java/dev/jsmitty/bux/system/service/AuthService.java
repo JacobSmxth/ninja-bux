@@ -5,6 +5,7 @@ import dev.jsmitty.bux.system.dto.FacilityResponse;
 import dev.jsmitty.bux.system.dto.LoginRequest;
 import dev.jsmitty.bux.system.dto.LoginResponse;
 import dev.jsmitty.bux.system.repository.AdminRepository;
+import dev.jsmitty.bux.system.repository.FacilityRepository;
 import dev.jsmitty.bux.system.security.JwtUtil;
 import java.util.List;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,14 +19,17 @@ public class AuthService {
 
   private final AuthenticationManager authenticationManager;
   private final AdminRepository adminRepository;
+  private final FacilityRepository facilityRepository;
   private final JwtUtil jwtUtil;
 
   public AuthService(
       AuthenticationManager authenticationManager,
       AdminRepository adminRepository,
+      FacilityRepository facilityRepository,
       JwtUtil jwtUtil) {
     this.authenticationManager = authenticationManager;
     this.adminRepository = adminRepository;
+    this.facilityRepository = facilityRepository;
     this.jwtUtil = jwtUtil;
   }
 
@@ -42,7 +46,12 @@ public class AuthService {
     String token = jwtUtil.generateToken(admin.getId(), admin.getUsername());
 
     List<FacilityResponse> facilities =
-        admin.getFacilities().stream().map(FacilityResponse::from).toList();
+        (admin.isSuperAdmin()
+                ? facilityRepository.findAll()
+                : admin.getFacilities())
+            .stream()
+            .map(FacilityResponse::from)
+            .toList();
 
     return new LoginResponse(token, admin.getId(), admin.getUsername(), facilities);
   }

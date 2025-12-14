@@ -1,5 +1,6 @@
 package dev.jsmitty.bux.system.security;
 
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,6 +14,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -29,7 +33,8 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http.csrf(csrf -> csrf.disable())
+    http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(
             auth ->
                 auth.requestMatchers("/api/auth/**")
@@ -38,21 +43,13 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/api/cn/**")
                     .permitAll()
+                    .requestMatchers("/api/facilities/**")
+                    .permitAll()
                     .requestMatchers("/", "/index.html", "/activity.html", "/static/**", "/*.html")
                     .permitAll()
-                    // Ninja-facing API endpoints (no auth required)
-                    .requestMatchers(
-                        "/api/facilities/{facilityId}/ninjas",
-                        "/api/facilities/{facilityId}/ninjas/{studentId}",
-                        "/api/facilities/{facilityId}/ninjas/{studentId}/ledger",
-                        "/api/facilities/{facilityId}/ninjas/{studentId}/purchases",
-                        "/api/facilities/{facilityId}/shop",
-                        "/api/facilities/{facilityId}/leaderboard/earned",
-                        "/api/facilities/{facilityId}/leaderboard/spent")
-                    .permitAll()
-                    // Admin-only endpoints require JWT
+                    // Everything else permitted for now
                     .anyRequest()
-                    .authenticated())
+                    .permitAll())
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(authenticationProvider())
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
@@ -77,5 +74,18 @@ public class SecurityConfig {
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
+  }
+
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowedOriginPatterns(List.of("*"));
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    config.setAllowedHeaders(List.of("*"));
+    config.setAllowCredentials(true);
+
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return source;
   }
 }

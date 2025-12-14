@@ -1,9 +1,11 @@
 package dev.jsmitty.bux.system.controller;
 
 import dev.jsmitty.bux.system.dto.*;
+import dev.jsmitty.bux.system.dto.LocalSyncRequest;
 import dev.jsmitty.bux.system.service.LedgerService;
 import dev.jsmitty.bux.system.service.NinjaService;
 import java.util.UUID;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,9 +51,18 @@ public class NinjaController {
 
   @PostMapping("/{studentId}/sync")
   public ResponseEntity<SingleSyncResponse> syncSingleNinja(
-      @PathVariable UUID facilityId, @PathVariable String studentId) {
-    accessChecker.checkFacilityAccess(facilityId);
-    return ResponseEntity.ok(ninjaService.syncSingleNinja(facilityId, studentId));
+      @PathVariable UUID facilityId,
+      @PathVariable String studentId,
+      @Valid @RequestBody CodeNinjasLoginRequest loginRequest) {
+    return ResponseEntity.ok(ninjaService.syncSingleNinja(facilityId, studentId, loginRequest));
+  }
+
+  @PostMapping("/{studentId}/sync-local")
+  public ResponseEntity<SingleSyncResponse> syncSingleNinjaLocal(
+      @PathVariable UUID facilityId,
+      @PathVariable String studentId,
+      @Valid @RequestBody LocalSyncRequest request) {
+    return ResponseEntity.ok(ninjaService.syncSingleNinjaLocal(facilityId, studentId, request));
   }
 
   @GetMapping("/{studentId}/ledger")
