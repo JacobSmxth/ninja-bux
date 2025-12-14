@@ -1,17 +1,33 @@
 package dev.jsmitty.bux.system.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
+@Table(name = "facilities")
 public class Facility {
+
   @Id private UUID id;
 
   @NotBlank(message = "Facility name can't be blank")
+  @Column(nullable = false)
   private String name;
 
+  @Column(name = "created_at", nullable = false)
   private LocalDateTime createdAt;
+
+  public Facility() {}
+
+  public Facility(UUID id, String name) {
+    this.id = id;
+    this.name = name;
+    this.createdAt = LocalDateTime.now();
+  }
 
   public UUID getId() {
     return id;
