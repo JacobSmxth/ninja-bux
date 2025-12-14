@@ -25,7 +25,7 @@ public class PurchaseController {
       @PathVariable UUID facilityId,
       @PathVariable String studentId,
       @Valid @RequestBody PurchaseRequest request) {
-    accessChecker.checkFacilityAccess(facilityId);
+    // Public endpoint - no auth check needed (ninjas can purchase)
     try {
       PurchaseResponse response = purchaseService.makePurchase(facilityId, studentId, request);
       return ResponseEntity.ok(response);

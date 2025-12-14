@@ -36,10 +36,24 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/h2-console/**")
                     .permitAll()
+                    .requestMatchers("/api/cn/**")
+                    .permitAll()
+                    .requestMatchers("/", "/index.html", "/activity.html", "/static/**", "/*.html")
+                    .permitAll()
+                    // Ninja-facing API endpoints (no auth required)
+                    .requestMatchers(
+                        "/api/facilities/{facilityId}/ninjas",
+                        "/api/facilities/{facilityId}/ninjas/{studentId}",
+                        "/api/facilities/{facilityId}/ninjas/{studentId}/ledger",
+                        "/api/facilities/{facilityId}/ninjas/{studentId}/purchases",
+                        "/api/facilities/{facilityId}/shop",
+                        "/api/facilities/{facilityId}/leaderboard/earned",
+                        "/api/facilities/{facilityId}/leaderboard/spent")
+                    .permitAll()
+                    // Admin-only endpoints require JWT
                     .anyRequest()
                     .authenticated())
-        .sessionManagement(
-            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(authenticationProvider())
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
         .headers(headers -> headers.frameOptions(frame -> frame.disable()));

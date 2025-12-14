@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Current Activity</title>
+  </head>
+  <body>
+    <h1>Current Activity</h1>
+    <div id="status" style="white-space: pre-wrap;"></div>
+    <div id="details" style="white-space: pre-wrap; margin-top: 1rem;"></div>
+
+    <script>
+      const ACTIVITY_URL = "/api/cn/activity/current";
+      const statusEl = document.getElementById("status");
+      const detailsEl = document.getElementById("details");
+
+      const token = sessionStorage.getItem("cn_token");
+      const studentId = sessionStorage.getItem("cn_studentId");
+      const facilityId = sessionStorage.getItem("cn_facilityId");
+      const firstName = sessionStorage.getItem("cn_firstName");
+      const lastName = sessionStorage.getItem("cn_lastName");
+      const facilityName = sessionStorage.getItem("cn_facilityName");
+
+      if (!token) {
+        statusEl.textContent = "No token found. Please log in again.";
+      } else {
+        loadActivity();
+      }
+
+      async function loadActivity() {
+        statusEl.textContent = "Fetching current activity...";
+        detailsEl.textContent = "";
+
+        try {
+          const response = await fetch(ACTIVITY_URL, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            const text = await response.text();
+            statusEl.textContent = `Fetch failed: ${response.status} ${response.statusText}\n${text}`;
+            return;
+          }
+
+          const data = await response.json();
+          statusEl.textContent = "Fetched.";
+
+          const rel = data?.relationShips?.data || {};
+          const rows = {
+            "Student ID": studentId || rel.studentId || "",
+            "Facility ID": facilityId || "",
+            "Facility Name": facilityName || "",
+            "First Name": firstName || rel.firstName || "",
+            "Last Name": lastName || rel.lastName || "",
+            "Course Name": rel.courseName || "",
+            "Level Name": rel.levelName || "",
+            "Activity Name": rel.activityName || "",
+            "Activity Type": rel.activityType || "",
+            "Activity ID": rel.activityId || data.id || "",
+            "Last Modified": data.lastModifiedDate || "",
+            "Created Date": data.createdDate || "",
+          };
+
+          const lines = Object.entries(rows)
+            .map(([k, v]) => `${k}: ${v ?? ""}`)
+            .join("\n");
+          detailsEl.textContent = lines;
+        } catch (error) {
+          statusEl.textContent = `Fetch error: ${error}`;
+        }
+      }
+    </script>
+  </body>
+</html>

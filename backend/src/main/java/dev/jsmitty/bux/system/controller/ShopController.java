@@ -21,7 +21,7 @@ public class ShopController {
 
   @GetMapping
   public ResponseEntity<ShopListResponse> getShopItems(@PathVariable UUID facilityId) {
-    accessChecker.checkFacilityAccess(facilityId);
+    // Public endpoint - no auth check needed
     return ResponseEntity.ok(shopService.getShopItems(facilityId));
   }
 

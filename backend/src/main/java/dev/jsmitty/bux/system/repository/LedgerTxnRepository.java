@@ -34,12 +34,15 @@ public interface LedgerTxnRepository extends JpaRepository<LedgerTxn, Long> {
       @Param("facilityId") UUID facilityId, @Param("since") LocalDateTime since, Pageable pageable);
 
   @Query(
-      "SELECT l.studentId, ABS(SUM(l.amount)) as total FROM LedgerTxn l WHERE l.facilityId ="
-          + " :facilityId AND l.amount < 0 AND l.type = :type AND l.createdAt >= :since GROUP BY"
-          + " l.studentId ORDER BY total DESC")
-  List<Object[]> findTopSpenders(
+      "SELECT l.studentId, ABS(SUM(l.amount)) as total FROM LedgerTxn l "
+          + "WHERE l.facilityId = :facilityId AND l.createdAt >= :since AND "
+          + "((l.type = :purchaseType AND l.amount < 0) "
+          + "OR (l.type = :refundType AND l.amount > 0 AND l.description LIKE 'Refund:%')) "
+          + "GROUP BY l.studentId ORDER BY total DESC")
+  List<Object[]> findTopSpendersNetOfRefunds(
       @Param("facilityId") UUID facilityId,
-      @Param("type") TxnType type,
+      @Param("purchaseType") TxnType purchaseType,
+      @Param("refundType") TxnType refundType,
       @Param("since") LocalDateTime since,
       Pageable pageable);
 }

@@ -12,6 +12,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
+  List<Purchase> findByFacilityId(UUID facilityId);
+
   Page<Purchase> findByFacilityId(UUID facilityId, Pageable pageable);
 
   Page<Purchase> findByFacilityIdAndStatus(

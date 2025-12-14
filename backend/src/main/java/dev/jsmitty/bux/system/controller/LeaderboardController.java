@@ -24,7 +24,7 @@ public class LeaderboardController {
       @PathVariable UUID facilityId,
       @RequestParam(defaultValue = "monthly") String period,
       @RequestParam(defaultValue = "10") int limit) {
-    accessChecker.checkFacilityAccess(facilityId);
+    // Public endpoint - no auth check needed
     return ResponseEntity.ok(leaderboardService.getTopEarners(facilityId, period, limit));
   }
 
@@ -33,7 +33,7 @@ public class LeaderboardController {
       @PathVariable UUID facilityId,
       @RequestParam(defaultValue = "monthly") String period,
       @RequestParam(defaultValue = "10") int limit) {
-    accessChecker.checkFacilityAccess(facilityId);
+    // Public endpoint - no auth check needed
     return ResponseEntity.ok(leaderboardService.getTopSpenders(facilityId, period, limit));
   }
 }

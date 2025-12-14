@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Code Ninjas Test Login</title>
+  </head>
+  <body>
+    <h1>Test Login</h1>
+    <form id="login-form">
+      <label>
+        Username
+        <input id="user" name="user" required placeholder="ninja.jacob.smith" />
+      </label>
+      <br />
+      <label>
+        Latitude
+        <input
+          id="latitude"
+          name="latitude"
+          type="number"
+          step="any"
+          required
+          placeholder="34.2319"
+        />
+      </label>
+      <br />
+      <label>
+        Longitude
+        <input
+          id="longitude"
+          name="longitude"
+          type="number"
+          step="any"
+          required
+          placeholder="-84.1627"
+        />
+      </label>
+      <br />
+      <button type="submit">Login</button>
+    </form>
+
+    <div id="status" style="white-space: pre-wrap; margin-top: 1rem;"></div>
+
+    <script>
+      const statusEl = document.getElementById("status");
+      const form = document.getElementById("login-form");
+
+      const LOGIN_URL = "/api/cn/login";
+      const TEST_TOKEN =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibmluamEuamFjb2Iuc21pdGgiLCJvaWQiOiI1MzM4OWUyZS1jNGY1LTRlMDYtOTZiNS0yN2UzYTk0Mjc3NTQiLCJmYWNpbGl0eWlkIjoiZmNkNDcyOGMtYWZmZi00YTNjLThhMzktMDVkMmNkOWQ4N2FjIiwiY29tbXVuaXR5dXNlcm5hbWUiOiIiLCJob21lbG9naW4iOiJGYWxzZSIsIm5iZiI6MTc2NTc0MzYzMCwiZXhwIjoxNzY1NzYxNjMwLCJpYXQiOjE3NjU3NDM2MzAsImlzcyI6Imh0dHBzOi8vbG9jYWxob3N0OjUwMDEvIiwiYXVkIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NDQzMTcvIn0.QUdrxws8TGvEqfKi964YEu7538-zWmm8dEviPY8q9k4";
+
+      function base64UrlDecode(str) {
+        try {
+          const normalized = str.replace(/-/g, "+").replace(/_/g, "/");
+          const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+          const decoded = atob(padded);
+          return decoded;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function decodeJwtPayload(token) {
+        if (!token) return null;
+        const parts = token.split(".");
+        if (parts.length !== 3) return null;
+        const payload = base64UrlDecode(parts[1]);
+        if (!payload) return null;
+        try {
+          return JSON.parse(payload);
+        } catch (e) {
+          return null;
+        }
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        statusEl.textContent = "Logging in...";
+
+        const user = document.getElementById("user").value.trim();
+        const latitude = parseFloat(document.getElementById("latitude").value);
+        const longitude = parseFloat(document.getElementById("longitude").value);
+
+        try {
+          const response = await fetch(LOGIN_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({ user, latitude, longitude }),
+          });
+
+          if (!response.ok) {
+            const text = await response.text();
+            statusEl.textContent = `Login failed: ${response.status} ${response.statusText}\n${text}`;
+            return;
+          }
+
+          let data = await response.json();
+
+          // If upstream wrapped JSON as a string, unwrap it.
+          if (typeof data === "string") {
+            try {
+              data = JSON.parse(data);
+            } catch (e) {
+              // leave as-is
+            }
+          }
+
+          const claims = decodeJwtPayload(data.token) || {};
+
+          if (!data.token) {
+            statusEl.textContent = `Login succeeded but no token returned.\nResponse:\n${JSON.stringify(
+              data,
+              null,
+              2
+            )}`;
+            return;
+          }
+
+          // Store data for the activity page.
+          sessionStorage.setItem("cn_token", data.token || "");
+          sessionStorage.setItem("cn_firstName", data.user?.firstName || "");
+          sessionStorage.setItem("cn_lastName", data.user?.lastName || "");
+          sessionStorage.setItem("cn_facilityName", data.user?.facilityName || "");
+          sessionStorage.setItem("cn_studentId", claims.oid || "");
+          sessionStorage.setItem("cn_facilityId", claims.facilityid || "");
+          sessionStorage.setItem("cn_tokenExp", claims.exp ? claims.exp.toString() : "");
+
+          statusEl.textContent = "Login successful. Redirecting...";
+          window.location.href = "activity.html";
+        } catch (error) {
+          statusEl.textContent = `Login error: ${error}`;
+        }
+      });
+
+      // Shortcut: use a provided token to jump straight to the activity page.
+      const testButton = document.createElement("button");
+      testButton.type = "button";
+      testButton.textContent = "Use Test Token (skip login)";
+      testButton.style.marginTop = "0.5rem";
+      testButton.addEventListener("click", () => {
+        const claims = decodeJwtPayload(TEST_TOKEN) || {};
+        sessionStorage.setItem("cn_token", TEST_TOKEN);
+        sessionStorage.setItem("cn_firstName", "");
+        sessionStorage.setItem("cn_lastName", "");
+        sessionStorage.setItem("cn_facilityName", "");
+        sessionStorage.setItem("cn_studentId", claims.oid || "");
+        sessionStorage.setItem("cn_facilityId", claims.facilityid || "");
+        sessionStorage.setItem("cn_tokenExp", claims.exp ? claims.exp.toString() : "");
+        statusEl.textContent = "Test token loaded. Redirecting...";
+        window.location.href = "activity.html";
+      });
+
+      form.appendChild(document.createElement("br"));
+      form.appendChild(testButton);
+    </script>
+  </body>
+</html>

@@ -79,27 +79,46 @@ public class PurchaseService {
       page = purchaseRepository.findByFacilityId(facilityId, PageRequest.of(offset / limit, limit));
     }
 
-    List<PurchaseListItem> purchases =
-        page.getContent().stream()
-            .map(
-                p -> {
-                  String ninjaName =
-                      ninjaRepository
-                          .findByFacilityIdAndStudentId(facilityId, p.getStudentId())
-                          .map(Ninja::getFullName)
-                          .orElse(null);
-                  return new PurchaseListItem(
-                      p.getId(),
-                      p.getStudentId(),
-                      ninjaName,
-                      p.getItemName(),
-                      p.getPrice(),
-                      p.getStatus(),
-                      p.getPurchasedAt());
-                })
-            .toList();
-
+    List<PurchaseListItem> purchases = mapPurchasesToListItems(facilityId, page.getContent());
     return new PurchaseListResponse(purchases);
+  }
+
+  public PurchaseListResponse getPurchases(UUID facilityId, PurchaseStatus status) {
+    List<Purchase> purchaseList;
+    if (status != null) {
+      purchaseList =
+          purchaseRepository.findByFacilityId(facilityId).stream()
+              .filter(p -> p.getStatus() == status)
+              .toList();
+    } else {
+      purchaseList = purchaseRepository.findByFacilityId(facilityId);
+    }
+
+    List<PurchaseListItem> purchases = mapPurchasesToListItems(facilityId, purchaseList);
+    return new PurchaseListResponse(purchases);
+  }
+
+  private List<PurchaseListItem> mapPurchasesToListItems(
+      UUID facilityId, List<Purchase> purchases) {
+    return purchases.stream()
+        .map(
+            p -> {
+              String ninjaName =
+                  ninjaRepository
+                      .findByFacilityIdAndStudentId(facilityId, p.getStudentId())
+                      .map(Ninja::getFullName)
+                      .orElse(null);
+              return new PurchaseListItem(
+                  p.getId(),
+                  p.getStudentId(),
+                  ninjaName,
+                  p.getItemName(),
+                  p.getPrice(),
+                  p.getStatus(),
+                  p.getPurchasedAt(),
+                  p.getFulfilledAt());
+            })
+        .toList();
   }
 
   @Transactional

@@ -31,14 +31,21 @@ public class DataInitializer {
       Facility facility = new Facility(facilityId, "Alpharetta");
       facilityRepository.save(facility);
 
+      UUID otherFacilityId = UUID.fromString("fcd1234c-afff-4a3c-8a39-05d2cd9d87ac");
+      Facility otherFacility = new Facility(otherFacilityId, "Vickery");
+      facilityRepository.save(otherFacility);
+
       // Create an admin
       Admin admin = new Admin("admin", passwordEncoder.encode("password"), "admin@example.com");
       admin.addFacility(facility);
+      admin.addFacility(otherFacility);
       adminRepository.save(admin);
 
       // Create some shop items
       shopItemRepository.save(
-          new ShopItem(facilityId, "Pizza Party Ticket", "Entry to monthly pizza party", 50));
+          new ShopItem(otherFacilityId, "Pizza Zone", "Entry to monthly pizza party", 50));
+      shopItemRepository.save(
+          new ShopItem(facilityId, "Extend Break Time", "Entry to monthly pizza party", 50));
       shopItemRepository.save(
           new ShopItem(facilityId, "Extra Lab Time", "30 minutes extra coding time", 25));
       shopItemRepository.save(new ShopItem(facilityId, "Candy Bar", "Choice of candy", 10));
@@ -50,8 +57,8 @@ public class DataInitializer {
       ninjaService.createOrUpdateNinja(
           facilityId,
           "53389e2e-c4f5-4e06-96bb-27e3a9427754",
-          "John",
-          "Doe",
+          "Jinu",
+          "Kim",
           "Yellow Belt",
           "Level 4",
           "Creating with Repeat and For Element loops!",
@@ -60,7 +67,7 @@ public class DataInitializer {
       ninjaService.createOrUpdateNinja(
           facilityId,
           "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
-          "Jane",
+          "Jacob",
           "Smith",
           "Orange Belt",
           "Level 2",
@@ -70,8 +77,8 @@ public class DataInitializer {
       ninjaService.createOrUpdateNinja(
           facilityId,
           "b2c3d4e5-f6a7-5b6c-9d8e-0f1a2b3c4d5e",
-          "Bob",
-          "Wilson",
+          "Lincoln",
+          "Churchill",
           "White Belt",
           "Level 6",
           "Introduction to Variables",

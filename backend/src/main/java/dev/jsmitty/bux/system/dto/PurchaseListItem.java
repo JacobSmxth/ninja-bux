@@ -10,4 +10,5 @@ public record PurchaseListItem(
     String itemName,
     Integer price,
     PurchaseStatus status,
-    LocalDateTime purchasedAt) {}
+    LocalDateTime purchasedAt,
+    LocalDateTime fulfilledAt) {}

@@ -27,14 +27,14 @@ public class NinjaController {
       @PathVariable UUID facilityId,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "50") int size) {
-    accessChecker.checkFacilityAccess(facilityId);
+    // Public endpoint - no auth check needed
     return ResponseEntity.ok(ninjaService.getNinjas(facilityId, page, size));
   }
 
   @GetMapping("/{studentId}")
   public ResponseEntity<NinjaResponse> getNinja(
       @PathVariable UUID facilityId, @PathVariable String studentId) {
-    accessChecker.checkFacilityAccess(facilityId);
+    // Public endpoint - no auth check needed
     return ninjaService
         .getNinja(facilityId, studentId)
         .map(ResponseEntity::ok)
@@ -60,7 +60,7 @@ public class NinjaController {
       @PathVariable String studentId,
       @RequestParam(defaultValue = "50") int limit,
       @RequestParam(defaultValue = "0") int offset) {
-    accessChecker.checkFacilityAccess(facilityId);
+    // Public endpoint - no auth check needed
     return ResponseEntity.ok(ledgerService.getLedger(facilityId, studentId, limit, offset));
   }
 }
