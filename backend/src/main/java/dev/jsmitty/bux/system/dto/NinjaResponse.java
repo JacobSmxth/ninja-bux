@@ -10,8 +10,12 @@ public record NinjaResponse(
     String lastName,
     String courseName,
     String levelName,
-    String activityName,
-    String activityType,
+    Integer levelSequence,
+    String activityId,
+    String groupId,
+    String subGroupId,
+    Integer completedSteps,
+    Integer totalSteps,
     Integer currentBalance,
     LocalDateTime lastSyncedAt) {
   public static NinjaResponse from(Ninja ninja) {
@@ -22,8 +26,12 @@ public record NinjaResponse(
         ninja.getLastName(),
         ninja.getCourseName(),
         ninja.getLevelName(),
-        ninja.getActivityName(),
-        ninja.getActivityType(),
+        ninja.getLevelSequence(),
+        ninja.getActivityId(),
+        ninja.getGroupId(),
+        ninja.getSubGroupId(),
+        ninja.getCompletedSteps(),
+        ninja.getTotalSteps(),
         ninja.getCurrentBalance(),
         ninja.getLastSyncedAt());
   }
@@ -36,8 +44,12 @@ public record NinjaResponse(
         ninja.getLastName(),
         ninja.getCourseName(),
         ninja.getLevelName(),
-        null,
-        null,
+        ninja.getLevelSequence(),
+        ninja.getActivityId(),
+        ninja.getGroupId(),
+        ninja.getSubGroupId(),
+        ninja.getCompletedSteps(),
+        ninja.getTotalSteps(),
         ninja.getCurrentBalance(),
         ninja.getLastSyncedAt());
   }

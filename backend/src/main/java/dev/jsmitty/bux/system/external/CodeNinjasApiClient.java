@@ -6,6 +6,7 @@ import dev.jsmitty.bux.system.external.dto.CodeNinjasActivityResponse;
 import dev.jsmitty.bux.system.external.dto.CodeNinjasActivityResult;
 import dev.jsmitty.bux.system.external.dto.CodeNinjasLoginResponse;
 import dev.jsmitty.bux.system.external.dto.CodeNinjasLoginResult;
+import dev.jsmitty.bux.system.external.dto.LevelStatusSummary;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
@@ -99,6 +100,97 @@ public class CodeNinjasApiClient {
     }
   }
 
+  public LevelStatusSummary getLevelStatus(
+      String token, String programId, String courseId, String levelId) {
+    HttpHeaders headers = defaultHeaders();
+    headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+
+    HttpEntity<Void> request = new HttpEntity<>(headers);
+    String url =
+        BASE_URL
+            + "/center/api/level/statusinfo?programId="
+            + programId
+            + "&courseId="
+            + courseId;
+    if (levelId != null && !levelId.isBlank()) {
+      url += "&levelId=" + levelId;
+    }
+
+    try {
+      ResponseEntity<String> response =
+          restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+      return summarizeLevelStatus(response.getBody(), programId, courseId, levelId);
+    } catch (HttpStatusCodeException ex) {
+      String body = ex.getResponseBodyAsString();
+      log.warn("Code Ninjas level status failed: status={} body={} ", ex.getStatusCode(), body);
+      throw new ResponseStatusException(
+          HttpStatus.BAD_GATEWAY,
+          "Code Ninjas level status failed: " + ex.getStatusCode() + " body=" + body,
+          ex);
+    }
+  }
+
+  public String getCurrentGroup(String token, String programId, String courseId) {
+    HttpHeaders headers = defaultHeaders();
+    headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+
+    HttpEntity<Void> request = new HttpEntity<>(headers);
+    String url =
+        BASE_URL
+            + "/center/api/common/groups/currentGroup?programId="
+            + programId
+            + "&courseId="
+            + courseId;
+
+    try {
+      ResponseEntity<String> response =
+          restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+      return unwrapIfStringifiedJson(response.getBody());
+    } catch (HttpStatusCodeException ex) {
+      String body = ex.getResponseBodyAsString();
+      log.warn("Code Ninjas currentGroup failed: status={} body={} ", ex.getStatusCode(), body);
+      throw new ResponseStatusException(
+          HttpStatus.BAD_GATEWAY,
+          "Code Ninjas currentGroup failed: " + ex.getStatusCode() + " body=" + body,
+          ex);
+    } catch (Exception ex) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_GATEWAY, "Failed to parse Code Ninjas currentGroup", ex);
+    }
+  }
+
+  public String getNinjaInfo(String token, String courseId, String userId, Boolean getBeltChangeInfo) {
+    HttpHeaders headers = defaultHeaders();
+    headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+
+    HttpEntity<Void> request = new HttpEntity<>(headers);
+    String url =
+        BASE_URL
+            + "/center/api/common/ninjaInfo?courseId="
+            + courseId
+            + "&userId="
+            + userId;
+    if (getBeltChangeInfo != null) {
+      url += "&getBeltChangeInfo=" + getBeltChangeInfo;
+    }
+
+    try {
+      ResponseEntity<String> response =
+          restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+      return unwrapIfStringifiedJson(response.getBody());
+    } catch (HttpStatusCodeException ex) {
+      String body = ex.getResponseBodyAsString();
+      log.warn("Code Ninjas ninjaInfo failed: status={} body={} ", ex.getStatusCode(), body);
+      throw new ResponseStatusException(
+          HttpStatus.BAD_GATEWAY,
+          "Code Ninjas ninjaInfo failed: " + ex.getStatusCode() + " body=" + body,
+          ex);
+    } catch (Exception ex) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_GATEWAY, "Failed to parse Code Ninjas ninjaInfo", ex);
+    }
+  }
+
   private CodeNinjasLoginResponse parseLoginResponse(String rawBody) {
     if (rawBody == null || rawBody.isBlank()) {
       return null;
@@ -133,6 +225,89 @@ public class CodeNinjasApiClient {
       return objectMapper.readValue(trimmed, String.class);
     }
     return trimmed;
+  }
+
+  private LevelStatusSummary summarizeLevelStatus(
+      String rawBody, String programId, String courseId, String levelId) {
+    try {
+      String body = unwrapIfStringifiedJson(rawBody);
+      var root = objectMapper.readTree(body);
+
+      int total = 0;
+      int done = 0;
+      String nextActivityId = null;
+      String nextActivityType = null;
+      Integer nextSequence = null;
+      Integer levelSequence = null;
+
+      if (root.isArray()) {
+        for (var levelNode : root) {
+          String currentLevelId = asText(levelNode, "id");
+          Integer currentLevelSeq = asInt(levelNode, "sequence");
+          if (levelId != null && currentLevelId != null && !levelId.equals(currentLevelId)) {
+            continue;
+          }
+          if (levelSequence == null) {
+            levelSequence = currentLevelSeq;
+          }
+          var activitiesNode = levelNode.get("activities");
+          if (activitiesNode != null && activitiesNode.isArray()) {
+            for (var activityNode : activitiesNode) {
+              String activityId = asText(activityNode, "id");
+              String activityType = asText(activityNode, "type");
+              Integer activitySeq = asInt(activityNode, "sequence");
+              var groupsNode = activityNode.get("groups");
+              if (groupsNode != null && groupsNode.isArray()) {
+                for (var groupNode : groupsNode) {
+                  var subGroupsNode = groupNode.get("subGroups");
+                  if (subGroupsNode != null && subGroupsNode.isArray()) {
+                    for (var subNode : subGroupsNode) {
+                      total++;
+                      boolean status = subNode.has("status") && subNode.get("status").asBoolean();
+                      if (status) {
+                        done++;
+                      } else if (nextActivityId == null) {
+                        nextActivityId = activityId;
+                        nextActivityType = activityType;
+                        nextSequence = activitySeq;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      int percent = total == 0 ? 0 : Math.round((done * 100f) / total);
+      return new LevelStatusSummary(
+          programId,
+          courseId,
+          levelId,
+          levelSequence,
+          total,
+          done,
+          percent,
+          nextActivityId,
+          nextActivityType,
+          nextSequence);
+    } catch (Exception ex) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_GATEWAY, "Failed to parse Code Ninjas level status", ex);
+    }
+  }
+
+  private String asText(com.fasterxml.jackson.databind.JsonNode node, String field) {
+    return node != null && node.has(field) && !node.get(field).isNull()
+        ? node.get(field).asText()
+        : null;
+  }
+
+  private Integer asInt(com.fasterxml.jackson.databind.JsonNode node, String field) {
+    return node != null && node.has(field) && node.get(field).canConvertToInt()
+        ? node.get(field).asInt()
+        : null;
   }
 
   private HttpHeaders defaultHeaders() {
@@ -177,6 +352,16 @@ public class CodeNinjasApiClient {
             ? body.relationShips().data().activityId()
             : null;
 
+    String programId =
+        body.relationShips() != null && body.relationShips().data() != null
+            ? body.relationShips().data().programId()
+            : null;
+
+    String courseId =
+        body.relationShips() != null && body.relationShips().data() != null
+            ? body.relationShips().data().courseId()
+            : null;
+
     String studentId =
         body.relationShips() != null && body.relationShips().data() != null
             ? body.relationShips().data().studentId()
@@ -186,10 +371,25 @@ public class CodeNinjasApiClient {
         body.relationShips() != null && body.relationShips().data() != null
             ? body.relationShips().data().courseName()
             : null;
+    String levelId =
+        body.relationShips() != null && body.relationShips().data() != null
+            ? body.relationShips().data().levelId()
+            : null;
     String levelName =
         body.relationShips() != null && body.relationShips().data() != null
             ? body.relationShips().data().levelName()
             : null;
+
+    String groupId =
+        body.relationShips() != null && body.relationShips().data() != null
+            ? body.relationShips().data().groupId()
+            : null;
+
+    String subGroupId =
+        body.relationShips() != null && body.relationShips().data() != null
+            ? body.relationShips().data().subgroupId()
+            : null;
+
     String activityName =
         body.relationShips() != null && body.relationShips().data() != null
             ? body.relationShips().data().activityName()
@@ -203,10 +403,16 @@ public class CodeNinjasApiClient {
         body.id(),
         activityId != null ? activityId : body.id(),
         studentId,
+        programId,
+        courseId,
         courseName,
         levelName,
+        levelId,
+        null,
         activityName,
         activityType,
+        groupId,
+        subGroupId,
         body.createdDate(),
         body.lastModifiedDate());
   }

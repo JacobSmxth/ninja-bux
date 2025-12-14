@@ -1,0 +1,89 @@
+// Fonts
+$font-family: 'azo-sans-web', 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+
+// Brand colors
+$ninja-red: #E31E24;
+$ninja-black: #000000;
+$ninja-white: #FFFFFF;
+$ninja-gray: #666666;
+$light-gray: #f5f5f5;
+
+// Core palette
+$primary: $ninja-red;
+$primary-dark: darken($ninja-red, 8%);
+$secondary: #111827;
+$danger: #ef4444;
+$success: #10b981;
+$warning: #f59e0b;
+$info: #3b82f6;
+
+$text-primary: #111827;
+$text-secondary: #4b5563;
+$text-muted: #6b7280;
+
+$bg-primary: #ffffff;
+$bg-secondary: #f9fafb;
+$bg-dark: #000000;
+
+$border-color: #e5e7eb;
+
+// Belt colors
+$belt-colors: (
+  'white': #ffffff,
+  'yellow': #ffd700,
+  'orange': #ff8c00,
+  'green': #32cd32,
+  'blue': #4169e1,
+  'purple': #9370db,
+  'red': #dc143c,
+  'brown': #8b4513,
+  'black': #1a1a1a
+);
+
+$white-belt: map-get($belt-colors, 'white');
+$yellow-belt: map-get($belt-colors, 'yellow');
+$orange-belt: map-get($belt-colors, 'orange');
+$green-belt: map-get($belt-colors, 'green');
+$blue-belt: map-get($belt-colors, 'blue');
+$purple-belt: map-get($belt-colors, 'purple');
+$red-belt: map-get($belt-colors, 'red');
+$black-belt: map-get($belt-colors, 'black');
+
+// Spacing
+$space-xs: 6px;
+$space-sm: 10px;
+$space-md: 16px;
+$space-lg: 24px;
+$space-xl: 32px;
+$space-2xl: 48px;
+
+// Typography
+$font-size-xs: 12px;
+$font-size-sm: 14px;
+$font-size-base: 16px;
+$font-size-lg: 20px;
+$font-size-xl: 28px;
+$font-size-2xl: 36px;
+$font-size-3xl: 54px;
+
+// Border radius
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-xl: 20px;
+$radius-full: 999px;
+
+// Shadows
+$shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+$shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.15);
+
+// Breakpoints
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+
+// Transitions
+$transition-fast: 150ms ease;
+$transition-base: 200ms ease;
+$transition-slow: 300ms ease;

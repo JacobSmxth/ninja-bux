@@ -88,10 +88,31 @@ public class NinjaService {
 
     CodeNinjasActivityResult activity = codeNinjasApiClient.getCurrentActivity(login.token());
 
-    Map<String, Object> changes =
-        upsertFromActivity(facilityId, studentId, login, activity);
+    // Fetch level status for step counts / sequence if available
+    var levelStatus =
+        activity.programId() != null && activity.courseId() != null
+            ? codeNinjasApiClient.getLevelStatus(
+                login.token(), activity.programId(), activity.courseId(), activity.levelId())
+            : null;
+
+    LocalSyncRequest payload =
+        new LocalSyncRequest(
+            login.firstName(),
+            login.lastName(),
+            activity.courseName(),
+            activity.levelId(),
+            levelStatus != null ? levelStatus.levelSequence() : activity.levelSequence(),
+            activity.activityId(),
+            activity.groupId(),
+            activity.subGroupId(),
+            levelStatus != null ? levelStatus.completedSteps() : null,
+            levelStatus != null ? levelStatus.totalSteps() : null,
+            activity.lastModifiedDate());
+
+    Map<String, Object> changes = upsertFromClientData(facilityId, studentId, payload);
     changes.put("token", login.token());
     changes.put("activity", activity);
+    changes.put("levelStatus", levelStatus);
 
     return new SingleSyncResponse(studentId, true, changes);
   }
@@ -103,35 +124,17 @@ public class NinjaService {
       String firstName,
       String lastName,
       String courseName,
-      String levelName,
-      String activityName,
-      String activityType) {
+      String levelName) {
     Optional<Ninja> existing = ninjaRepository.findByFacilityIdAndStudentId(facilityId, studentId);
 
     if (existing.isPresent()) {
       Ninja ninja = existing.get();
-      String oldActivityName = ninja.getActivityName();
 
       ninja.setFirstName(firstName);
       ninja.setLastName(lastName);
       ninja.setCourseName(courseName);
       ninja.setLevelName(levelName);
-      ninja.setActivityType(activityType);
       ninja.setLastSyncedAt(LocalDateTime.now());
-
-      if (activityName != null && !activityName.equals(oldActivityName)) {
-        ninja.setActivityName(activityName);
-        int reward = pointCalculator.calculateActivityReward(courseName, activityType);
-        if (reward > 0) {
-          ledgerService.createTransaction(
-              facilityId,
-              studentId,
-              reward,
-              TxnType.ACTIVITY_REWARD,
-              "Completed: " + activityName,
-              null);
-        }
-      }
 
       return ninjaRepository.save(ninja);
     } else {
@@ -140,8 +143,6 @@ public class NinjaService {
       ninja.setLastName(lastName);
       ninja.setCourseName(courseName);
       ninja.setLevelName(levelName);
-      ninja.setActivityName(activityName);
-      ninja.setActivityType(activityType);
       ninja.setLastSyncedAt(LocalDateTime.now());
 
       int initialBalance = pointCalculator.calculateInitialBalance(courseName, levelName);
@@ -180,9 +181,13 @@ public class NinjaService {
     ninja.setFirstName(login.firstName());
     ninja.setLastName(login.lastName());
     ninja.setCourseName(activity.courseName());
-    ninja.setLevelName(activity.levelName());
-    ninja.setActivityName(activity.activityName());
-    ninja.setActivityType(activity.activityType());
+    ninja.setLevelId(activity.levelId());
+    ninja.setLevelSequence(activity.levelSequence());
+    ninja.setLevelName(
+        activity.levelSequence() != null
+            ? "Level " + activity.levelSequence()
+            : activity.levelName());
+    ninja.setActivityId(activity.activityId());
     ninja.setLastSyncedAt(LocalDateTime.now());
 
     boolean newActivity =
@@ -193,7 +198,7 @@ public class NinjaService {
     int reward = 0;
 
     if (existing.isPresent()) {
-      if (newActivity && activity.activityName() != null) {
+      if (newActivity) {
         reward = pointCalculator.calculateActivityReward(activity.courseName(), activity.activityType());
         if (reward > 0) {
           ledgerService.createTransaction(
@@ -201,16 +206,17 @@ public class NinjaService {
               studentId,
               reward,
               TxnType.ACTIVITY_REWARD,
-              "Completed: " + activity.activityName(),
+              "Completed activity",
               null);
           awarded = true;
           changes.put("rewardPoints", reward);
-          changes.put("activityName", activity.activityName());
         }
       }
     } else {
       int initialBalance =
-          pointCalculator.calculateInitialBalance(activity.courseName(), activity.levelName());
+          pointCalculator.calculateInitialBalance(
+              activity.courseName(),
+              activity.levelSequence() != null ? "Level " + activity.levelSequence() : activity.levelName());
       ninja.setCurrentBalance(initialBalance);
       ninjaRepository.save(ninja);
       if (initialBalance > 0) {
@@ -219,7 +225,9 @@ public class NinjaService {
             studentId,
             initialBalance,
             TxnType.INITIAL_BALANCE,
-            "Initial balance for " + activity.courseName() + " " + activity.levelName(),
+            "Initial balance for "
+                + activity.courseName()
+                + (activity.levelSequence() != null ? " Level " + activity.levelSequence() : ""),
             null);
       }
       changes.put("initialBalance", initialBalance);
@@ -249,40 +257,64 @@ public class NinjaService {
     ninja.setFirstName(payload.firstName());
     ninja.setLastName(payload.lastName());
     ninja.setCourseName(payload.courseName());
-    ninja.setLevelName(payload.levelName());
-    ninja.setActivityName(payload.activityName());
-    ninja.setActivityType(payload.activityType());
+    ninja.setLevelId(payload.levelId());
+    ninja.setLevelSequence(payload.levelSequence());
+    ninja.setLevelName(
+        payload.levelSequence() != null ? "Level " + payload.levelSequence() : ninja.getLevelName());
+    ninja.setActivityId(payload.activityId());
+    ninja.setGroupId(payload.groupId());
+    ninja.setSubGroupId(payload.subGroupId());
+    ninja.setTotalSteps(payload.totalSteps());
     ninja.setLastSyncedAt(LocalDateTime.now());
 
     boolean newActivity = false;
     if (payload.activityId() != null && !payload.activityId().isBlank()) {
       newActivity = !payload.activityId().equals(ninja.getLastActivityId());
-    } else if (payload.activityName() != null
-        && !payload.activityName().equals(ninja.getActivityName())) {
-      newActivity = true;
     }
 
+    // Progress-based reward
+    int prevLevelSeq = ninja.getLevelSequence() != null ? ninja.getLevelSequence() : 0;
+    int newLevelSeq = payload.levelSequence() != null ? payload.levelSequence() : prevLevelSeq;
+    Integer prevCompletedRaw = ninja.getCompletedSteps();
+    Integer prevTotalRaw = ninja.getTotalSteps();
+    int prevCompleted =
+        (prevCompletedRaw != null && prevLevelSeq == newLevelSeq) ? prevCompletedRaw : 0;
+    int newCompleted = payload.completedSteps() != null ? payload.completedSteps() : prevCompleted;
+    int deltaSteps;
+
+    if (newLevelSeq > prevLevelSeq) {
+      int remainingPriorLevel =
+          (prevTotalRaw != null && prevCompletedRaw != null && prevTotalRaw > prevCompletedRaw)
+              ? (prevTotalRaw - prevCompletedRaw)
+              : 0;
+      deltaSteps = Math.max(0, remainingPriorLevel + newCompleted);
+    } else {
+      deltaSteps = Math.max(0, newCompleted - prevCompleted);
+    }
     boolean awarded = false;
+
     if (existing.isPresent()) {
-      if (newActivity && payload.activityName() != null) {
+      if (newActivity) {
         int reward =
-            pointCalculator.calculateActivityReward(payload.courseName(), payload.activityType());
+            pointCalculator.calculateActivityReward(payload.courseName(), null);
         if (reward > 0) {
           ledgerService.createTransaction(
               facilityId,
               studentId,
               reward,
               TxnType.ACTIVITY_REWARD,
-              "Completed: " + payload.activityName(),
+              "Completed activity",
               null);
           awarded = true;
           changes.put("rewardPoints", reward);
-          changes.put("activityName", payload.activityName());
+          changes.put("activityId", payload.activityId());
         }
       }
     } else {
       int initialBalance =
-          pointCalculator.calculateInitialBalance(payload.courseName(), payload.levelName());
+          pointCalculator.calculateInitialBalance(
+              payload.courseName(),
+              payload.levelSequence() != null ? "Level " + payload.levelSequence() : null);
       ninja.setCurrentBalance(initialBalance);
       Ninja saved = ninjaRepository.save(ninja);
       if (initialBalance > 0) {
@@ -291,7 +323,8 @@ public class NinjaService {
             studentId,
             initialBalance,
             TxnType.INITIAL_BALANCE,
-            "Initial balance for " + payload.courseName() + " " + payload.levelName(),
+            "Initial balance for " + payload.courseName() +
+                (payload.levelSequence() != null ? " Level " + payload.levelSequence() : ""),
             null);
       }
       changes.put("initialBalance", initialBalance);
@@ -302,6 +335,32 @@ public class NinjaService {
     if (payload.lastModifiedDate() != null) {
       ninja.setLastActivityUpdatedAt(payload.lastModifiedDate().toLocalDateTime());
     }
+
+    if (deltaSteps > 0) {
+      int multiplier = Math.min(5, Math.max(1, newLevelSeq));
+      int progressReward = deltaSteps * multiplier;
+      String progressLabel =
+          newLevelSeq > prevLevelSeq
+              ? "Progress reward (level up): "
+                  + deltaSteps
+                  + " steps (Level "
+                  + newLevelSeq
+                  + ")"
+              : "Progress reward: " + deltaSteps + " steps (Level " + newLevelSeq + ")";
+      ledgerService.createTransaction(
+          facilityId,
+          studentId,
+          progressReward,
+          TxnType.ACTIVITY_REWARD,
+          progressLabel,
+          null);
+      changes.put("progressReward", progressReward);
+      awarded = true;
+    }
+
+    ninja.setCompletedSteps(newCompleted);
+    ninja.setLevelSequence(newLevelSeq);
+    ninja.setTotalSteps(payload.totalSteps());
 
     Ninja saved = ninjaRepository.save(ninja);
     changes.put("ninja", NinjaResponse.from(saved));

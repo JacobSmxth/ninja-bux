@@ -32,11 +32,26 @@ public class Ninja {
   @Column(name = "level_name")
   private String levelName;
 
-  @Column(name = "activity_name")
-  private String activityName;
+  @Column(name = "level_id")
+  private String levelId;
 
-  @Column(name = "activity_type")
-  private String activityType;
+  @Column(name = "level_sequence")
+  private Integer levelSequence;
+
+  @Column(name = "activity_id")
+  private String activityId;
+
+  @Column(name = "group_id")
+  private String groupId;
+
+  @Column(name = "sub_group_id")
+  private String subGroupId;
+
+  @Column(name = "completed_steps")
+  private Integer completedSteps;
+
+  @Column(name = "total_steps")
+  private Integer totalSteps;
 
   @Column(name = "last_activity_id")
   private String lastActivityId;
@@ -118,20 +133,60 @@ public class Ninja {
     this.levelName = levelName;
   }
 
-  public String getActivityName() {
-    return activityName;
+  public String getLevelId() {
+    return levelId;
   }
 
-  public void setActivityName(String activityName) {
-    this.activityName = activityName;
+  public void setLevelId(String levelId) {
+    this.levelId = levelId;
   }
 
-  public String getActivityType() {
-    return activityType;
+  public Integer getLevelSequence() {
+    return levelSequence;
   }
 
-  public void setActivityType(String activityType) {
-    this.activityType = activityType;
+  public void setLevelSequence(Integer levelSequence) {
+    this.levelSequence = levelSequence;
+  }
+
+  public String getActivityId() {
+    return activityId;
+  }
+
+  public void setActivityId(String activityId) {
+    this.activityId = activityId;
+  }
+
+  public String getGroupId() {
+    return groupId;
+  }
+
+  public void setGroupId(String groupId) {
+    this.groupId = groupId;
+  }
+
+  public String getSubGroupId() {
+    return subGroupId;
+  }
+
+  public void setSubGroupId(String subGroupId) {
+    this.subGroupId = subGroupId;
+  }
+
+  public Integer getCompletedSteps() {
+    return completedSteps;
+  }
+
+  public void setCompletedSteps(Integer completedSteps) {
+    this.completedSteps = completedSteps;
+  }
+
+  public Integer getTotalSteps() {
+    return totalSteps;
+  }
+
+  public void setTotalSteps(Integer totalSteps) {
+    this.totalSteps = totalSteps;
   }
 
   public String getLastActivityId() {
