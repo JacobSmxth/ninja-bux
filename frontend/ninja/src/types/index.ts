@@ -15,6 +15,7 @@ export interface Ninja {
   levelName: string | null;
   levelSequence?: number | null;
   activityId?: string | null;
+  activitySequence?: number | null;
   groupId?: string | null;
   subGroupId?: string | null;
   completedSteps?: number | null;

@@ -9,6 +9,7 @@ public record LocalSyncRequest(
     String levelId,
     Integer levelSequence,
     String activityId,
+    Integer activitySequence,
     String groupId,
     String subGroupId,
     Integer completedSteps,

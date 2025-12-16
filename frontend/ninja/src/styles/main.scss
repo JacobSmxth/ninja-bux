@@ -228,6 +228,19 @@ img { max-width: 100%; display: block; }
   background: url('/login-bg.svg') center/cover no-repeat, $bg-secondary;
 }
 
+.login-status {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    border-radius: .25rem;
+    font-weight: 400;
+    font-size: 1rem;
+    text-align: center;
+    padding: .75rem 1.25rem;
+    margin-bottom: 1rem;
+    max-width: 300px;
+}
+
 .glass-card {
   padding: 64px 28px;
   border: 1px solid #fcfdff57;
@@ -380,7 +393,7 @@ img { max-width: 100%; display: block; }
   border: 2px solid rgba(252, 253, 255, 0.3);
   border-radius: 20px;
   padding: 3.75rem 2.75rem;
-  max-width: 320px;
+  max-width: 420px;
   min-height: 620px;
   width: 100%;
   position: relative;

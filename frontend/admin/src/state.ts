@@ -4,6 +4,7 @@ interface AppState {
   token: string | null;
   adminId: number | null;
   username: string | null;
+  superAdmin: boolean;
   facilities: Facility[];
   currentFacilityId: string | null;
 }
@@ -12,6 +13,7 @@ const state: AppState = {
   token: localStorage.getItem('token'),
   adminId: localStorage.getItem('adminId') ? Number(localStorage.getItem('adminId')) : null,
   username: localStorage.getItem('username'),
+  superAdmin: localStorage.getItem('superAdmin') === 'true',
   facilities: JSON.parse(localStorage.getItem('facilities') || '[]'),
   currentFacilityId: localStorage.getItem('currentFacilityId'),
 };
@@ -35,6 +37,9 @@ export function setState(updates: Partial<AppState>) {
     if (updates.username) localStorage.setItem('username', updates.username);
     else localStorage.removeItem('username');
   }
+  if (updates.superAdmin !== undefined) {
+    localStorage.setItem('superAdmin', String(updates.superAdmin));
+  }
   if (updates.facilities !== undefined) {
     localStorage.setItem('facilities', JSON.stringify(updates.facilities));
   }
@@ -42,6 +47,10 @@ export function setState(updates: Partial<AppState>) {
     if (updates.currentFacilityId) localStorage.setItem('currentFacilityId', updates.currentFacilityId);
     else localStorage.removeItem('currentFacilityId');
   }
+}
+
+export function isSuperAdmin(): boolean {
+  return state.superAdmin;
 }
 
 export function isAuthenticated(): boolean {
@@ -57,8 +66,10 @@ export function logout() {
     token: null,
     adminId: null,
     username: null,
+    superAdmin: false,
     facilities: [],
     currentFacilityId: null,
   });
+  localStorage.removeItem('superAdmin');
   window.location.hash = '#/login';
 }

@@ -20,10 +20,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class NinjaService {
 
+  private static final Logger log = LoggerFactory.getLogger(NinjaService.class);
   private final NinjaRepository ninjaRepository;
   private final LedgerService ledgerService;
   private final PointCalculator pointCalculator;
@@ -95,6 +98,16 @@ public class NinjaService {
                 login.token(), activity.programId(), activity.courseId(), activity.levelId())
             : null;
 
+    Integer activitySequence = null;
+    if (levelStatus != null && levelStatus.activitySequences() != null && activity.activityId() != null) {
+      activitySequence = levelStatus.activitySequences().get(activity.activityId());
+      log.info("Activity ID: {}, Activity Sequences Map: {}, Extracted Sequence: {}",
+          activity.activityId(), levelStatus.activitySequences(), activitySequence);
+    } else {
+      log.warn("Unable to extract activity sequence - levelStatus: {}, activityId: {}",
+          levelStatus != null, activity.activityId());
+    }
+
     LocalSyncRequest payload =
         new LocalSyncRequest(
             login.firstName(),
@@ -103,6 +116,7 @@ public class NinjaService {
             activity.levelId(),
             levelStatus != null ? levelStatus.levelSequence() : activity.levelSequence(),
             activity.activityId(),
+            activitySequence,
             activity.groupId(),
             activity.subGroupId(),
             levelStatus != null ? levelStatus.completedSteps() : null,
@@ -168,92 +182,20 @@ public class NinjaService {
     return ninjaRepository.findByFacilityIdAndStudentId(facilityId, studentId).isPresent();
   }
 
-  private Map<String, Object> upsertFromActivity(
-      UUID facilityId,
-      String studentId,
-      CodeNinjasLoginResult login,
-      CodeNinjasActivityResult activity) {
-    Map<String, Object> changes = new HashMap<>();
-
-    Optional<Ninja> existing = ninjaRepository.findByFacilityIdAndStudentId(facilityId, studentId);
-    Ninja ninja = existing.orElseGet(() -> new Ninja(studentId, facilityId));
-
-    ninja.setFirstName(login.firstName());
-    ninja.setLastName(login.lastName());
-    ninja.setCourseName(activity.courseName());
-    ninja.setLevelId(activity.levelId());
-    ninja.setLevelSequence(activity.levelSequence());
-    ninja.setLevelName(
-        activity.levelSequence() != null
-            ? "Level " + activity.levelSequence()
-            : activity.levelName());
-    ninja.setActivityId(activity.activityId());
-    ninja.setLastSyncedAt(LocalDateTime.now());
-
-    boolean newActivity =
-        activity.activityId() != null
-            && !activity.activityId().equals(ninja.getLastActivityId());
-
-    boolean awarded = false;
-    int reward = 0;
-
-    if (existing.isPresent()) {
-      if (newActivity) {
-        reward = pointCalculator.calculateActivityReward(activity.courseName(), activity.activityType());
-        if (reward > 0) {
-          ledgerService.createTransaction(
-              facilityId,
-              studentId,
-              reward,
-              TxnType.ACTIVITY_REWARD,
-              "Completed activity",
-              null);
-          awarded = true;
-          changes.put("rewardPoints", reward);
-        }
-      }
-    } else {
-      int initialBalance =
-          pointCalculator.calculateInitialBalance(
-              activity.courseName(),
-              activity.levelSequence() != null ? "Level " + activity.levelSequence() : activity.levelName());
-      ninja.setCurrentBalance(initialBalance);
-      ninjaRepository.save(ninja);
-      if (initialBalance > 0) {
-        ledgerService.createTransaction(
-            facilityId,
-            studentId,
-            initialBalance,
-            TxnType.INITIAL_BALANCE,
-            "Initial balance for "
-                + activity.courseName()
-                + (activity.levelSequence() != null ? " Level " + activity.levelSequence() : ""),
-            null);
-      }
-      changes.put("initialBalance", initialBalance);
-    }
-
-    ninja.setLastActivityId(activity.activityId());
-    if (activity.lastModifiedDate() != null) {
-      ninja.setLastActivityUpdatedAt(activity.lastModifiedDate().toLocalDateTime());
-    }
-
-    Ninja saved = ninjaRepository.save(ninja);
-
-    changes.put("ninja", NinjaResponse.from(saved));
-    if (!awarded) {
-      changes.put("updated", true);
-    }
-
-    return changes;
-  }
-
   private Map<String, Object> upsertFromClientData(
       UUID facilityId, String studentId, LocalSyncRequest payload) {
     Map<String, Object> changes = new HashMap<>();
     Optional<Ninja> existing = ninjaRepository.findByFacilityIdAndStudentId(facilityId, studentId);
     Ninja ninja = existing.orElseGet(() -> new Ninja(studentId, facilityId));
 
+    // Store old values BEFORE updating for comparison
+    Integer oldLevelSequence = ninja.getLevelSequence();
+    Integer oldActivitySequence = ninja.getLastActivitySequence();
+
+    log.info("Sync for student {}: oldLevelSeq={}, newLevelSeq={}, oldActivitySeq={}, newActivitySeq={}",
+        studentId, oldLevelSequence, payload.levelSequence(), oldActivitySequence, payload.activitySequence());
+
+    // Update ninja fields
     ninja.setFirstName(payload.firstName());
     ninja.setLastName(payload.lastName());
     ninja.setCourseName(payload.courseName());
@@ -262,61 +204,82 @@ public class NinjaService {
     ninja.setLevelName(
         payload.levelSequence() != null ? "Level " + payload.levelSequence() : ninja.getLevelName());
     ninja.setActivityId(payload.activityId());
+    ninja.setActivitySequence(payload.activitySequence());
     ninja.setGroupId(payload.groupId());
     ninja.setSubGroupId(payload.subGroupId());
+    ninja.setCompletedSteps(payload.completedSteps());
     ninja.setTotalSteps(payload.totalSteps());
     ninja.setLastSyncedAt(LocalDateTime.now());
-
-    boolean newActivity = false;
-    if (payload.activityId() != null && !payload.activityId().isBlank()) {
-      newActivity = !payload.activityId().equals(ninja.getLastActivityId());
+    ninja.setLastActivityId(payload.activityId());
+    ninja.setLastActivitySequence(payload.activitySequence());
+    if (payload.lastModifiedDate() != null) {
+      ninja.setLastActivityUpdatedAt(payload.lastModifiedDate().toLocalDateTime());
     }
 
-    // Progress-based reward
-    int prevLevelSeq = ninja.getLevelSequence() != null ? ninja.getLevelSequence() : 0;
-    int newLevelSeq = payload.levelSequence() != null ? payload.levelSequence() : prevLevelSeq;
-    Integer prevCompletedRaw = ninja.getCompletedSteps();
-    Integer prevTotalRaw = ninja.getTotalSteps();
-    int prevCompleted =
-        (prevCompletedRaw != null && prevLevelSeq == newLevelSeq) ? prevCompletedRaw : 0;
-    int newCompleted = payload.completedSteps() != null ? payload.completedSteps() : prevCompleted;
-    int deltaSteps;
-
-    if (newLevelSeq > prevLevelSeq) {
-      int remainingPriorLevel =
-          (prevTotalRaw != null && prevCompletedRaw != null && prevTotalRaw > prevCompletedRaw)
-              ? (prevTotalRaw - prevCompletedRaw)
-              : 0;
-      deltaSteps = Math.max(0, remainingPriorLevel + newCompleted);
-    } else {
-      deltaSteps = Math.max(0, newCompleted - prevCompleted);
-    }
     boolean awarded = false;
 
     if (existing.isPresent()) {
-      if (newActivity) {
-        int reward =
-            pointCalculator.calculateActivityReward(payload.courseName(), null);
-        if (reward > 0) {
+      // Activity progression reward - when user advances to a new activity
+      if (payload.activitySequence() != null && oldActivitySequence != null) {
+        int currentSequence = payload.activitySequence();
+        int activitiesCompleted = currentSequence - oldActivitySequence;
+
+        if (activitiesCompleted > 0) {
+          int bucksPerActivity = pointCalculator.getBeltMultiplier(payload.courseName());
+          int totalReward = activitiesCompleted * bucksPerActivity;
+
+          String description = activitiesCompleted == 1
+              ? "Completed activity (seq " + oldActivitySequence + " → " + currentSequence + ")"
+              : "Completed " + activitiesCompleted + " activities (seq " + oldActivitySequence + " → " + currentSequence + ")";
+
           ledgerService.createTransaction(
               facilityId,
               studentId,
-              reward,
+              totalReward,
               TxnType.ACTIVITY_REWARD,
-              "Completed activity",
+              description,
               null);
           awarded = true;
-          changes.put("rewardPoints", reward);
-          changes.put("activityId", payload.activityId());
+          changes.put("activityReward", totalReward);
+          changes.put("activitiesCompleted", activitiesCompleted);
+          log.info("Activity reward for {}: {} activities, {} bux", studentId, activitiesCompleted, totalReward);
+        }
+      }
+
+      // Level progression reward - when user advances to a new level
+      if (payload.levelSequence() != null && oldLevelSequence != null) {
+        int levelDifference = payload.levelSequence() - oldLevelSequence;
+
+        if (levelDifference > 0) {
+          int progressionMultiplier = pointCalculator.getProgressionMultiplier(payload.courseName());
+          int progressionReward = levelDifference * progressionMultiplier;
+
+          String description = "Level progression: Level " + oldLevelSequence + " → " + payload.levelSequence();
+
+          ledgerService.createTransaction(
+              facilityId,
+              studentId,
+              progressionReward,
+              TxnType.ACTIVITY_REWARD,
+              description,
+              null);
+
+          changes.put("levelProgressionReward", progressionReward);
+          changes.put("levelDifference", levelDifference);
+          changes.put("oldLevelSequence", oldLevelSequence);
+          changes.put("newLevelSequence", payload.levelSequence());
+          awarded = true;
+          log.info("Level progression reward for {}: {} levels, {} bux", studentId, levelDifference, progressionReward);
         }
       }
     } else {
+      // New ninja - give initial balance
       int initialBalance =
           pointCalculator.calculateInitialBalance(
               payload.courseName(),
               payload.levelSequence() != null ? "Level " + payload.levelSequence() : null);
       ninja.setCurrentBalance(initialBalance);
-      Ninja saved = ninjaRepository.save(ninja);
+
       if (initialBalance > 0) {
         ledgerService.createTransaction(
             facilityId,
@@ -328,39 +291,8 @@ public class NinjaService {
             null);
       }
       changes.put("initialBalance", initialBalance);
-      ninja = saved;
+      log.info("New ninja {}: initial balance {} bux", studentId, initialBalance);
     }
-
-    ninja.setLastActivityId(payload.activityId());
-    if (payload.lastModifiedDate() != null) {
-      ninja.setLastActivityUpdatedAt(payload.lastModifiedDate().toLocalDateTime());
-    }
-
-    if (deltaSteps > 0) {
-      int multiplier = Math.min(5, Math.max(1, newLevelSeq));
-      int progressReward = deltaSteps * multiplier;
-      String progressLabel =
-          newLevelSeq > prevLevelSeq
-              ? "Progress reward (level up): "
-                  + deltaSteps
-                  + " steps (Level "
-                  + newLevelSeq
-                  + ")"
-              : "Progress reward: " + deltaSteps + " steps (Level " + newLevelSeq + ")";
-      ledgerService.createTransaction(
-          facilityId,
-          studentId,
-          progressReward,
-          TxnType.ACTIVITY_REWARD,
-          progressLabel,
-          null);
-      changes.put("progressReward", progressReward);
-      awarded = true;
-    }
-
-    ninja.setCompletedSteps(newCompleted);
-    ninja.setLevelSequence(newLevelSeq);
-    ninja.setTotalSteps(payload.totalSteps());
 
     Ninja saved = ninjaRepository.save(ninja);
     changes.put("ninja", NinjaResponse.from(saved));

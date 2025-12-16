@@ -1,5 +1,7 @@
 package dev.jsmitty.bux.system.external.dto;
 
+import java.util.Map;
+
 public record LevelStatusSummary(
     String programId,
     String courseId,
@@ -10,4 +12,5 @@ public record LevelStatusSummary(
     int completionPercent,
     String nextActivityId,
     String nextActivityType,
-    Integer nextSequence) {}
+    Integer nextSequence,
+    Map<String, Integer> activitySequences) {}

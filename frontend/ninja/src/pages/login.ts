@@ -1,4 +1,4 @@
-import { get, post } from '../api/client';
+import { post } from '../api/client';
 import { setState, setCurrentNinja } from '../state';
 import { navigate } from '../router';
 import type { Ninja } from '../types';
@@ -12,11 +12,6 @@ function decodeJwt(token: string): Record<string, unknown> | null {
   } catch (e) {
     return null;
   }
-}
-
-function isValidNumber(value: string): boolean {
-  const n = Number(value);
-  return !Number.isNaN(n) && Number.isFinite(n);
 }
 
 export async function renderLogin() {
@@ -53,6 +48,10 @@ export async function renderLogin() {
   const form = document.getElementById('login-form') as HTMLFormElement;
   const usernameInput = document.getElementById('cn-username') as HTMLInputElement;
   const statusEl = document.getElementById('login-status') as HTMLDivElement;
+  // Default fallback coordinates (used when geolocation unavailable over HTTP)
+  const DEFAULT_LAT = 0;
+  const DEFAULT_LON = 0;
+
   let cachedLat: number | null = null;
   let cachedLon: number | null = null;
   let cachedToken: string | null = null;
@@ -77,17 +76,40 @@ export async function renderLogin() {
   };
 
   function setStatus(message: string, isError = false) {
+    if (!isError) {
+      statusEl.textContent = '';
+      statusEl.style.display = 'none';
+      return;
+    }
     statusEl.textContent = message;
-    statusEl.style.color = isError ? '#b00020' : '#0b3d91';
+    statusEl.style.color = '#b00020';
+    statusEl.style.display = 'block';
   }
 
   function requestLocation(): Promise<void> {
     return new Promise((resolve) => {
-      if (!navigator.geolocation) {
-        setStatus('Geolocation not supported by this browser.', true);
+      // Check if we're on a secure origin (HTTPS or localhost)
+      const isSecure = window.location.protocol === 'https:' ||
+                       window.location.hostname === 'localhost' ||
+                       window.location.hostname === '127.0.0.1';
+
+      if (!isSecure) {
+        // Geolocation won't work over HTTP on network - use fallback
+        cachedLat = DEFAULT_LAT;
+        cachedLon = DEFAULT_LON;
+        setStatus('Using default location (HTTP mode)');
         resolve();
         return;
       }
+
+      if (!navigator.geolocation) {
+        cachedLat = DEFAULT_LAT;
+        cachedLon = DEFAULT_LON;
+        setStatus('Geolocation not supported, using default location');
+        resolve();
+        return;
+      }
+
       setStatus('Requesting location...');
       navigator.geolocation.getCurrentPosition(
         pos => {
@@ -97,13 +119,20 @@ export async function renderLogin() {
           setStatus('Location acquired.');
           resolve();
         },
-        err => {
-          setStatus(`Location error: ${err.message}`, true);
+        () => {
+          // Use fallback coordinates on error
+          cachedLat = DEFAULT_LAT;
+          cachedLon = DEFAULT_LON;
+          setStatus('Using default location');
           resolve();
-        }
+        },
+        { timeout: 5000 }
       );
     });
   }
+
+  // Request location immediately on page load
+  requestLocation();
 
   form.addEventListener('submit', async evt => {
     evt.preventDefault();
@@ -117,13 +146,8 @@ export async function renderLogin() {
     if (cachedLat === null || cachedLon === null) {
       await requestLocation();
     }
-    const latitude = cachedLat;
-    const longitude = cachedLon;
-
-    if (!isValidNumber(String(latitude)) || !isValidNumber(String(longitude))) {
-      setStatus('Location is required. Please allow location access and try again.', true);
-      return;
-    }
+    const latitude = cachedLat ?? DEFAULT_LAT;
+    const longitude = cachedLon ?? DEFAULT_LON;
 
     setStatus('Logging in...');
     const loginRes = await post<any>('/cn/login', {
@@ -182,8 +206,9 @@ export async function renderLogin() {
       sessionStorage.setItem('cn_levelId', rel.levelId);
     }
 
-    // Get level status to derive level sequence
+    // Get level status to derive level sequence and activity sequence
     let levelSequence: number | null = null;
+    let activitySequence: number | null = null;
     let completedSteps: number | null = null;
     let totalSteps: number | null = null;
     try {
@@ -202,6 +227,12 @@ export async function renderLogin() {
         levelSequence = statusData.levelSequence ?? null;
         completedSteps = statusData.completedSteps ?? null;
         totalSteps = statusData.totalSteps ?? null;
+
+        // Extract activity sequence from the activitySequences map
+        const currentActivityId = rel.activityId || activityData.id;
+        if (statusData.activitySequences && currentActivityId) {
+          activitySequence = statusData.activitySequences[currentActivityId] ?? null;
+        }
       }
     } catch {
       // ignore
@@ -246,6 +277,7 @@ export async function renderLogin() {
         levelId: rel.levelId || '',
         levelSequence: levelSequence,
         activityId: rel.activityId || activityData.id,
+        activitySequence: activitySequence,
         groupId: rel.groupId || '',
         subGroupId: rel.subgroupId || '',
         completedSteps: completedSteps,

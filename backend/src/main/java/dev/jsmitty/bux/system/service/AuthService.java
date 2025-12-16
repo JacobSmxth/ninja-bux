@@ -53,6 +53,6 @@ public class AuthService {
             .map(FacilityResponse::from)
             .toList();
 
-    return new LoginResponse(token, admin.getId(), admin.getUsername(), facilities);
+    return new LoginResponse(token, admin.getId(), admin.getUsername(), admin.isSuperAdmin(), facilities);
   }
 }

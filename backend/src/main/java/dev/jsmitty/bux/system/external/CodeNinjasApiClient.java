@@ -239,6 +239,7 @@ public class CodeNinjasApiClient {
       String nextActivityType = null;
       Integer nextSequence = null;
       Integer levelSequence = null;
+      Map<String, Integer> activitySequences = new java.util.HashMap<>();
 
       if (root.isArray()) {
         for (var levelNode : root) {
@@ -256,6 +257,9 @@ public class CodeNinjasApiClient {
               String activityId = asText(activityNode, "id");
               String activityType = asText(activityNode, "type");
               Integer activitySeq = asInt(activityNode, "sequence");
+              if (activityId != null && activitySeq != null) {
+                activitySequences.put(activityId, activitySeq);
+              }
               var groupsNode = activityNode.get("groups");
               if (groupsNode != null && groupsNode.isArray()) {
                 for (var groupNode : groupsNode) {
@@ -291,7 +295,8 @@ public class CodeNinjasApiClient {
           percent,
           nextActivityId,
           nextActivityType,
-          nextSequence);
+          nextSequence,
+          activitySequences);
     } catch (Exception ex) {
       throw new ResponseStatusException(
           HttpStatus.BAD_GATEWAY, "Failed to parse Code Ninjas level status", ex);

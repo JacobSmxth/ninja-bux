@@ -7,7 +7,30 @@ export interface LoginResponse {
   token: string;
   adminId: number;
   username: string;
+  superAdmin: boolean;
   facilities: Facility[];
+}
+
+export interface AdminUser {
+  id: number;
+  username: string;
+  email: string;
+  superAdmin: boolean;
+  facilities: Facility[];
+  createdAt: string;
+}
+
+export interface AdminListResponse {
+  admins: AdminUser[];
+  totalCount: number;
+}
+
+export interface CreateAdminRequest {
+  username: string;
+  password: string;
+  email: string;
+  facilityIds: string[];
+  superAdmin: boolean;
 }
 
 export interface Ninja {

@@ -53,12 +53,13 @@ export async function renderLogin() {
       return;
     }
 
-    const { token, adminId, username: adminUsername, facilities } = response.data!;
+    const { token, adminId, username: adminUsername, superAdmin, facilities } = response.data!;
 
     setState({
       token,
       adminId,
       username: adminUsername,
+      superAdmin,
       facilities,
       currentFacilityId: facilities[0]?.id || null,
     });

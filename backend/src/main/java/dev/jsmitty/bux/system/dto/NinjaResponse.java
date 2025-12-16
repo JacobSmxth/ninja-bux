@@ -12,6 +12,7 @@ public record NinjaResponse(
     String levelName,
     Integer levelSequence,
     String activityId,
+    Integer activitySequence,
     String groupId,
     String subGroupId,
     Integer completedSteps,
@@ -28,6 +29,7 @@ public record NinjaResponse(
         ninja.getLevelName(),
         ninja.getLevelSequence(),
         ninja.getActivityId(),
+        ninja.getActivitySequence(),
         ninja.getGroupId(),
         ninja.getSubGroupId(),
         ninja.getCompletedSteps(),
@@ -37,20 +39,6 @@ public record NinjaResponse(
   }
 
   public static NinjaResponse summary(Ninja ninja) {
-    return new NinjaResponse(
-        ninja.getId(),
-        ninja.getStudentId(),
-        ninja.getFirstName(),
-        ninja.getLastName(),
-        ninja.getCourseName(),
-        ninja.getLevelName(),
-        ninja.getLevelSequence(),
-        ninja.getActivityId(),
-        ninja.getGroupId(),
-        ninja.getSubGroupId(),
-        ninja.getCompletedSteps(),
-        ninja.getTotalSteps(),
-        ninja.getCurrentBalance(),
-        ninja.getLastSyncedAt());
+    return from(ninja);
   }
 }

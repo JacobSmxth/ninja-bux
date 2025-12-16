@@ -32,4 +32,20 @@ public class FacilityAccessChecker {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to this facility");
     }
   }
+
+  public void checkSuperAdmin() {
+    AdminUserDetails admin = getCurrentAdmin();
+    if (!admin.isSuperAdmin()) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Super admin access required");
+    }
+  }
+
+  public boolean isSuperAdmin() {
+    try {
+      AdminUserDetails admin = getCurrentAdmin();
+      return admin.isSuperAdmin();
+    } catch (ResponseStatusException e) {
+      return false;
+    }
+  }
 }

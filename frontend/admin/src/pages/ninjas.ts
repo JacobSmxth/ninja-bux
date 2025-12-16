@@ -1,7 +1,7 @@
 import { get, post } from '../api/client';
 import { getCurrentFacilityId } from '../state';
 import { renderNavbar, setupNavbarListeners } from '../components/navbar';
-import { showModal, showAlert, closeModal } from '../components/modal';
+import { showModal, showAlert } from '../components/modal';
 import type { NinjaListResponse, Ninja, AdjustmentResponse, LedgerResponse } from '../types';
 
 let allNinjas: Ninja[] = [];
@@ -123,35 +123,33 @@ function renderNinjasTable() {
 }
 
 function showAdjustModal(studentId: string, name: string, currentBalance: number) {
-  showModal('Adjust Points', `
-    <div class="modal-info">
-      <strong>${name}</strong><br>
-      Current Balance: <strong>${currentBalance} Bux</strong>
-    </div>
-    <form id="adjust-form">
-      <div class="form-group">
-        <label for="adjust-amount">Amount (positive to add, negative to deduct)</label>
-        <input type="number" id="adjust-amount" required>
+  showModal({
+    title: 'Adjust Bux',
+    content: `
+      <div class="modal-info">
+        <strong>${name}</strong><br>
+        Current Balance: <strong>${currentBalance} Bux</strong>
       </div>
-      <div class="form-group">
-        <label for="adjust-reason">Reason</label>
-        <input type="text" id="adjust-reason" required placeholder="e.g., Bonus for helping">
-      </div>
-    </form>
-  `);
-
-  // Replace confirm button behavior
-  const modal = document.querySelector('.modal-overlay')!;
-  const confirmBtn = modal.querySelector('.modal-confirm');
-  if (confirmBtn) {
-    confirmBtn.addEventListener('click', async (e) => {
-      e.preventDefault();
+      <form id="adjust-form">
+        <div class="form-group">
+          <label for="adjust-amount">Amount (positive to add, negative to deduct)</label>
+          <input type="number" id="adjust-amount" required>
+        </div>
+        <div class="form-group">
+          <label for="adjust-reason">Reason</label>
+          <input type="text" id="adjust-reason" required placeholder="e.g., Bonus for helping">
+        </div>
+      </form>
+    `,
+    showConfirm: true,
+    confirmText: 'Adjust',
+    onConfirm: async () => {
       const amount = Number((document.getElementById('adjust-amount') as HTMLInputElement).value);
       const reason = (document.getElementById('adjust-reason') as HTMLInputElement).value;
 
       if (!amount || !reason) {
         showAlert('Please fill in all fields', 'error');
-        return;
+        throw new Error('Validation failed');
       }
 
       const facilityId = getCurrentFacilityId();
@@ -162,11 +160,10 @@ function showAdjustModal(studentId: string, name: string, currentBalance: number
 
       if (response.error) {
         showAlert(response.error, 'error');
-        return;
+        throw new Error(response.error);
       }
 
-      showAlert(`Points adjusted! New balance: ${response.data!.newBalance} Bux`, 'success');
-      closeModal();
+      showAlert(`Bux adjusted! New balance: ${response.data!.newBalance} Bux`, 'success');
 
       // Update the ninja in our list
       const ninja = allNinjas.find(n => n.studentId === studentId);
@@ -174,8 +171,8 @@ function showAdjustModal(studentId: string, name: string, currentBalance: number
         ninja.currentBalance = response.data!.newBalance;
         renderNinjasTable();
       }
-    });
-  }
+    }
+  });
 }
 
 async function showLedgerModal(studentId: string) {

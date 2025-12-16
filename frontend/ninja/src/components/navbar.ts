@@ -3,7 +3,6 @@ import { navigate } from '../router';
 
 export function renderNavbar(): string {
   const { currentNinja } = getState();
-  const balance = currentNinja?.currentBalance ?? 0;
   const name = currentNinja ? `${currentNinja.firstName}` : '';
 
   return `
@@ -21,7 +20,6 @@ export function renderNavbar(): string {
         </div>
 
         <div class="navbar-right">
-          <span class="nav-balance">${balance} Bux</span>
           <span class="nav-user">${name}</span>
           <button class="btn btn-logout" id="logout-btn">Logout</button>
         </div>

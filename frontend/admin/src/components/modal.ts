@@ -1,16 +1,38 @@
-export function showModal(title: string, content: string, onConfirm?: () => void): void {
+export interface ModalOptions {
+  title: string;
+  content: string;
+  onConfirm?: () => void | Promise<void>;
+  showConfirm?: boolean;
+  confirmText?: string;
+}
+
+export function showModal(title: string, content: string, onConfirm?: () => void): void;
+export function showModal(options: ModalOptions): void;
+export function showModal(
+  titleOrOptions: string | ModalOptions,
+  content?: string,
+  onConfirm?: () => void
+): void {
+  const options: ModalOptions =
+    typeof titleOrOptions === 'string'
+      ? { title: titleOrOptions, content: content!, onConfirm }
+      : titleOrOptions;
+
   const existingModal = document.querySelector('.modal-overlay');
   if (existingModal) existingModal.remove();
+
+  const showConfirmBtn = options.showConfirm ?? !!options.onConfirm;
+  const confirmText = options.confirmText ?? 'Confirm';
 
   const modal = document.createElement('div');
   modal.className = 'modal-overlay';
   modal.innerHTML = `
     <div class="modal">
-      <h2>${title}</h2>
-      <div class="modal-content">${content}</div>
+      <h2>${options.title}</h2>
+      <div class="modal-content">${options.content}</div>
       <div class="modal-actions">
         <button class="btn btn-secondary modal-cancel">Cancel</button>
-        ${onConfirm ? '<button class="btn btn-primary modal-confirm">Confirm</button>' : ''}
+        ${showConfirmBtn ? `<button class="btn btn-primary modal-confirm">${confirmText}</button>` : ''}
       </div>
     </div>
   `;
@@ -18,14 +40,18 @@ export function showModal(title: string, content: string, onConfirm?: () => void
   document.body.appendChild(modal);
 
   modal.querySelector('.modal-cancel')?.addEventListener('click', () => modal.remove());
-  modal.querySelector('.modal-overlay')?.addEventListener('click', (e) => {
+  modal.addEventListener('click', (e) => {
     if (e.target === modal) modal.remove();
   });
 
-  if (onConfirm) {
-    modal.querySelector('.modal-confirm')?.addEventListener('click', () => {
-      onConfirm();
-      modal.remove();
+  if (options.onConfirm) {
+    modal.querySelector('.modal-confirm')?.addEventListener('click', async () => {
+      try {
+        await options.onConfirm!();
+        modal.remove();
+      } catch {
+        // Don't close modal on error - let the callback handle showing errors
+      }
     });
   }
 }

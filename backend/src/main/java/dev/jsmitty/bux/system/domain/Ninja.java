@@ -41,6 +41,9 @@ public class Ninja {
   @Column(name = "activity_id")
   private String activityId;
 
+  @Column(name = "activity_sequence")
+  private Integer activitySequence;
+
   @Column(name = "group_id")
   private String groupId;
 
@@ -55,6 +58,9 @@ public class Ninja {
 
   @Column(name = "last_activity_id")
   private String lastActivityId;
+
+  @Column(name = "last_activity_sequence")
+  private Integer lastActivitySequence;
 
   @Column(name = "last_activity_updated_at")
   private LocalDateTime lastActivityUpdatedAt;
@@ -157,6 +163,14 @@ public class Ninja {
     this.activityId = activityId;
   }
 
+  public Integer getActivitySequence() {
+    return activitySequence;
+  }
+
+  public void setActivitySequence(Integer activitySequence) {
+    this.activitySequence = activitySequence;
+  }
+
   public String getGroupId() {
     return groupId;
   }
@@ -195,6 +209,14 @@ public class Ninja {
 
   public void setLastActivityId(String lastActivityId) {
     this.lastActivityId = lastActivityId;
+  }
+
+  public Integer getLastActivitySequence() {
+    return lastActivitySequence;
+  }
+
+  public void setLastActivitySequence(Integer lastActivitySequence) {
+    this.lastActivitySequence = lastActivitySequence;
   }
 
   public LocalDateTime getLastActivityUpdatedAt() {
