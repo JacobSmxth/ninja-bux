@@ -91,7 +91,7 @@ export async function renderLeaderboard() {
             <div class="period-tabs">
               <button class="period-tab ${currentPeriod === 'weekly' ? 'active' : ''}" data-period="weekly">Weekly</button>
               <button class="period-tab ${currentPeriod === 'monthly' ? 'active' : ''}" data-period="monthly">Monthly</button>
-              <button class="period-tab ${currentPeriod === 'yearly' ? 'active' : ''}" data-period="yearly">Yearly</button>
+              <button class="period-tab ${currentPeriod === 'allTime' ? 'active' : ''}" data-period="allTime">All Time</button>
             </div>
           </header>
 

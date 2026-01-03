@@ -157,7 +157,10 @@ export async function renderLogin() {
     });
 
     if (loginRes.error || !loginRes.data) {
-      setStatus(`Login failed: ${loginRes.error || 'unknown error'}`, true);
+      const friendlyError = loginRes.error && /404|not found/i.test(loginRes.error)
+        ? 'User not found. Please check your username.'
+        : (loginRes.error || 'unknown error');
+      setStatus(`Login failed: ${friendlyError}`, true);
       return;
     }
 
@@ -283,6 +286,7 @@ export async function renderLogin() {
         completedSteps: completedSteps,
         totalSteps: totalSteps,
         lastModifiedDate: activityData.lastModifiedDate || null,
+        facilityName: loginData.user?.facilityName || null,
       }
     );
     if (syncRes.error || !syncRes.data) {

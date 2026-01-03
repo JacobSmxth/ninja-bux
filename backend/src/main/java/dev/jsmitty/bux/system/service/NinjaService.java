@@ -11,7 +11,9 @@ import dev.jsmitty.bux.system.dto.SyncResponse;
 import dev.jsmitty.bux.system.external.CodeNinjasApiClient;
 import dev.jsmitty.bux.system.external.dto.CodeNinjasActivityResult;
 import dev.jsmitty.bux.system.external.dto.CodeNinjasLoginResult;
+import dev.jsmitty.bux.system.repository.FacilityRepository;
 import dev.jsmitty.bux.system.repository.NinjaRepository;
+import dev.jsmitty.bux.system.domain.Facility;
 import java.time.LocalDateTime;
 import java.util.*;
 import org.springframework.http.HttpStatus;
@@ -28,16 +30,19 @@ public class NinjaService {
 
   private static final Logger log = LoggerFactory.getLogger(NinjaService.class);
   private final NinjaRepository ninjaRepository;
+  private final FacilityRepository facilityRepository;
   private final LedgerService ledgerService;
   private final PointCalculator pointCalculator;
   private final CodeNinjasApiClient codeNinjasApiClient;
 
   public NinjaService(
       NinjaRepository ninjaRepository,
+      FacilityRepository facilityRepository,
       LedgerService ledgerService,
       PointCalculator pointCalculator,
       CodeNinjasApiClient codeNinjasApiClient) {
     this.ninjaRepository = ninjaRepository;
+    this.facilityRepository = facilityRepository;
     this.ledgerService = ledgerService;
     this.pointCalculator = pointCalculator;
     this.codeNinjasApiClient = codeNinjasApiClient;
@@ -78,6 +83,17 @@ public class NinjaService {
   @Transactional
   public SingleSyncResponse syncSingleNinjaLocal(
       UUID facilityId, String studentId, LocalSyncRequest payload) {
+    // Auto-create facility if it doesn't exist
+    if (!facilityRepository.existsById(facilityId)) {
+      String facilityName = payload.facilityName();
+      if (facilityName == null || facilityName.isBlank()) {
+        facilityName = "Facility " + facilityId.toString().substring(0, 8);
+      }
+      Facility newFacility = new Facility(facilityId, facilityName);
+      facilityRepository.save(newFacility);
+      log.info("Auto-created facility: {} ({})", facilityName, facilityId);
+    }
+
     Map<String, Object> changes = upsertFromClientData(facilityId, studentId, payload);
     return new SingleSyncResponse(studentId, true, changes);
   }
@@ -121,7 +137,8 @@ public class NinjaService {
             activity.subGroupId(),
             levelStatus != null ? levelStatus.completedSteps() : null,
             levelStatus != null ? levelStatus.totalSteps() : null,
-            activity.lastModifiedDate());
+            activity.lastModifiedDate(),
+            login.facilityName());
 
     Map<String, Object> changes = upsertFromClientData(facilityId, studentId, payload);
     changes.put("token", login.token());

@@ -16,7 +16,7 @@ export function renderNavbar(): string {
           <span class="app-title">NinjaBux</span>
           <nav class="navbar-nav">
             <a href="#/dashboard" class="${currentPath === '/dashboard' ? 'active' : ''}">Dashboard</a>
-            <div class="navbar-dropdown ${manageActive ? 'open' : ''}">
+            <div class="navbar-dropdown">
               <button id="manage-toggle" class="dropdown-toggle ${manageActive ? 'active' : ''}">
                 Manage
                 <span class="caret">▾</span>

@@ -56,7 +56,7 @@ public class LeaderboardService {
     return switch (period.toLowerCase()) {
       case "weekly" -> now.minusWeeks(1);
       case "monthly" -> now.minusMonths(1);
-      case "yearly" -> now.minusYears(1);
+      case "alltime" -> LocalDateTime.of(1900, 1, 1, 0, 0);
       default -> now.minusMonths(1);
     };
   }

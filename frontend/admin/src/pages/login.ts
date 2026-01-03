@@ -46,7 +46,7 @@ export async function renderLogin() {
     const response = await post<LoginResponse>('/api/auth/login', { username, password });
 
     if (response.error) {
-      errorDiv.textContent = response.error === 'HTTP 401' ? 'Invalid credentials' : response.error;
+      errorDiv.textContent = response.error;
       errorDiv.style.display = 'block';
       submitBtn.disabled = false;
       submitBtn.textContent = 'Login';

@@ -50,7 +50,5 @@ function handleRoute() {
 
 export function initRouter() {
   window.addEventListener('hashchange', handleRoute);
-  window.addEventListener('load', handleRoute);
-  // Handle initial load
   handleRoute();
 }

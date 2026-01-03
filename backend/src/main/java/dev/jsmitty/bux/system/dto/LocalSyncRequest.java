@@ -14,4 +14,5 @@ public record LocalSyncRequest(
     String subGroupId,
     Integer completedSteps,
     Integer totalSteps,
-    OffsetDateTime lastModifiedDate) {}
+    OffsetDateTime lastModifiedDate,
+    String facilityName) {}

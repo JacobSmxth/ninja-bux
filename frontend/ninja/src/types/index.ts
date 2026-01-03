@@ -3,7 +3,7 @@ export type TxnType = 'INITIAL_BALANCE' | 'ACTIVITY_REWARD' | 'PURCHASE' | 'ADJU
 
 export type PurchaseStatus = 'PENDING' | 'FULFILLED' | 'CANCELLED';
 
-export type LeaderboardPeriod = 'weekly' | 'monthly' | 'yearly';
+export type LeaderboardPeriod = 'weekly' | 'monthly' | 'allTime';
 
 // Ninja
 export interface Ninja {

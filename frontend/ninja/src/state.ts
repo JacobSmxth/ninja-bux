@@ -11,7 +11,7 @@ function loadNinja(): Ninja | null {
 }
 
 const state: AppState = {
-  facilityId: sessionStorage.getItem('facilityId') || 'fcd4728c-afff-4a3c-8a39-05d2cd9d87ac', // Default facility
+  facilityId: sessionStorage.getItem('facilityId') || '',
   studentId: sessionStorage.getItem('studentId'),
   currentNinja: loadNinja(),
 };
