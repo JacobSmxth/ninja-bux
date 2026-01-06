@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -12,44 +13,44 @@ import java.util.UUID;
 @Table(name = "facilities")
 public class Facility {
 
-  @Id private UUID id;
+    @Id private UUID id;
 
-  @NotBlank(message = "Facility name can't be blank")
-  @Column(nullable = false)
-  private String name;
+    @NotBlank(message = "Facility name can't be blank")
+    @Column(nullable = false)
+    private String name;
 
-  @Column(name = "created_at", nullable = false)
-  private LocalDateTime createdAt;
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
-  public Facility() {}
+    public Facility() {}
 
-  public Facility(UUID id, String name) {
-    this.id = id;
-    this.name = name;
-    this.createdAt = LocalDateTime.now();
-  }
+    public Facility(UUID id, String name) {
+        this.id = id;
+        this.name = name;
+        this.createdAt = LocalDateTime.now();
+    }
 
-  public UUID getId() {
-    return id;
-  }
+    public UUID getId() {
+        return id;
+    }
 
-  public void setId(UUID id) {
-    this.id = id;
-  }
+    public void setId(UUID id) {
+        this.id = id;
+    }
 
-  public String getName() {
-    return name;
-  }
+    public String getName() {
+        return name;
+    }
 
-  public void setName(String name) {
-    this.name = name;
-  }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-  public LocalDateTime getCreatedAt() {
-    return createdAt;
-  }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 
-  public void setCreatedAt(LocalDateTime createdAt) {
-    this.createdAt = createdAt;
-  }
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }

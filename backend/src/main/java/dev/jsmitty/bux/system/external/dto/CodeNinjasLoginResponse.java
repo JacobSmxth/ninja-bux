@@ -5,11 +5,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CodeNinjasLoginResponse(
-    @JsonProperty("token") String token, @JsonProperty("user") LoginUser user) {
+        @JsonProperty("token") String token, @JsonProperty("user") LoginUser user) {
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  public record LoginUser(
-      @JsonProperty("firstName") String firstName,
-      @JsonProperty("lastName") String lastName,
-      @JsonProperty("facilityName") String facilityName) {}
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record LoginUser(
+            @JsonProperty("firstName") String firstName,
+            @JsonProperty("lastName") String lastName,
+            @JsonProperty("facilityName") String facilityName) {}
 }

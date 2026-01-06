@@ -4,4 +4,4 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record CodeNinjasLoginRequest(
-    @NotBlank String user, @NotNull Double latitude, @NotNull Double longitude) {}
+        @NotBlank String user, @NotNull Double latitude, @NotNull Double longitude) {}

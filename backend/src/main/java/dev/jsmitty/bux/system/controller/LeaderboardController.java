@@ -2,38 +2,40 @@ package dev.jsmitty.bux.system.controller;
 
 import dev.jsmitty.bux.system.dto.LeaderboardResponse;
 import dev.jsmitty.bux.system.service.LeaderboardService;
-import java.util.UUID;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/facilities/{facilityId}/leaderboard")
 public class LeaderboardController {
 
-  private final LeaderboardService leaderboardService;
-  private final FacilityAccessChecker accessChecker;
+    private final LeaderboardService leaderboardService;
+    private final FacilityAccessChecker accessChecker;
 
-  public LeaderboardController(
-      LeaderboardService leaderboardService, FacilityAccessChecker accessChecker) {
-    this.leaderboardService = leaderboardService;
-    this.accessChecker = accessChecker;
-  }
+    public LeaderboardController(
+            LeaderboardService leaderboardService, FacilityAccessChecker accessChecker) {
+        this.leaderboardService = leaderboardService;
+        this.accessChecker = accessChecker;
+    }
 
-  @GetMapping("/earned")
-  public ResponseEntity<LeaderboardResponse> getTopEarners(
-      @PathVariable UUID facilityId,
-      @RequestParam(defaultValue = "monthly") String period,
-      @RequestParam(defaultValue = "10") int limit) {
-    // Public endpoint - no auth check needed
-    return ResponseEntity.ok(leaderboardService.getTopEarners(facilityId, period, limit));
-  }
+    @GetMapping("/earned")
+    public ResponseEntity<LeaderboardResponse> getTopEarners(
+            @PathVariable UUID facilityId,
+            @RequestParam(defaultValue = "monthly") String period,
+            @RequestParam(defaultValue = "10") int limit) {
+        // Public endpoint - no auth check needed
+        return ResponseEntity.ok(leaderboardService.getTopEarners(facilityId, period, limit));
+    }
 
-  @GetMapping("/spent")
-  public ResponseEntity<LeaderboardResponse> getTopSpenders(
-      @PathVariable UUID facilityId,
-      @RequestParam(defaultValue = "monthly") String period,
-      @RequestParam(defaultValue = "10") int limit) {
-    // Public endpoint - no auth check needed
-    return ResponseEntity.ok(leaderboardService.getTopSpenders(facilityId, period, limit));
-  }
+    @GetMapping("/spent")
+    public ResponseEntity<LeaderboardResponse> getTopSpenders(
+            @PathVariable UUID facilityId,
+            @RequestParam(defaultValue = "monthly") String period,
+            @RequestParam(defaultValue = "10") int limit) {
+        // Public endpoint - no auth check needed
+        return ResponseEntity.ok(leaderboardService.getTopSpenders(facilityId, period, limit));
+    }
 }
