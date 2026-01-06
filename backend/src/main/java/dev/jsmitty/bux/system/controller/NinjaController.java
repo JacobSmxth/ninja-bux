@@ -7,6 +7,7 @@ import dev.jsmitty.bux.system.service.NinjaService;
 
 import jakarta.validation.Valid;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,10 +33,9 @@ public class NinjaController {
     @GetMapping
     public ResponseEntity<NinjaListResponse> getNinjas(
             @PathVariable UUID facilityId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size) {
+            Pageable pageable) {
         // Public endpoint - no auth check needed
-        return ResponseEntity.ok(ninjaService.getNinjas(facilityId, page, size));
+        return ResponseEntity.ok(ninjaService.getNinjas(facilityId, pageable));
     }
 
     @GetMapping("/{studentId}")
@@ -48,11 +48,11 @@ public class NinjaController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/sync")
-    public ResponseEntity<SyncResponse> syncAllNinjas(@PathVariable UUID facilityId) {
-        accessChecker.checkFacilityAccess(facilityId);
-        return ResponseEntity.ok(ninjaService.syncAllNinjas(facilityId));
-    }
+    // @PostMapping("/sync")
+    // public ResponseEntity<SyncResponse> syncAllNinjas(@PathVariable UUID facilityId) {
+    //     accessChecker.checkFacilityAccess(facilityId);
+    //     return ResponseEntity.ok(ninjaService.syncAllNinjas(facilityId));
+    // }
 
     @PostMapping("/{studentId}/sync")
     public ResponseEntity<SingleSyncResponse> syncSingleNinja(
