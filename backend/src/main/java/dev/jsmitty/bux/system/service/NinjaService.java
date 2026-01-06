@@ -8,7 +8,6 @@ import dev.jsmitty.bux.system.dto.LocalSyncRequest;
 import dev.jsmitty.bux.system.dto.NinjaListResponse;
 import dev.jsmitty.bux.system.dto.NinjaResponse;
 import dev.jsmitty.bux.system.dto.SingleSyncResponse;
-import dev.jsmitty.bux.system.dto.SyncResponse;
 import dev.jsmitty.bux.system.external.CodeNinjasApiClient;
 import dev.jsmitty.bux.system.external.dto.CodeNinjasActivityResult;
 import dev.jsmitty.bux.system.external.dto.CodeNinjasLoginResult;
@@ -19,10 +18,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -50,13 +49,34 @@ public class NinjaService {
         this.codeNinjasApiClient = codeNinjasApiClient;
     }
 
-    public NinjaListResponse getNinjas(UUID facilityId, int page, int size) {
-        Page<Ninja> ninjaPage =
-                ninjaRepository.findByFacilityId(facilityId, PageRequest.of(page, size));
-        List<NinjaResponse> ninjas =
-                ninjaPage.getContent().stream().map(NinjaResponse::summary).toList();
-        return new NinjaListResponse(ninjas, ninjaPage.getTotalElements());
+    public NinjaListResponse getNinjas(UUID facilityId, Pageable pageable) {
+        Pageable effective = withDefaultSortAndLimits(pageable);
+
+        Page<NinjaResponse> page =
+                ninjaRepository.findByFacilityId(facilityId, effective).map(NinjaResponse::summary);
+
+        return NinjaListResponse.from(page);
     }
+
+    private Pageable withDefaultSortAndLimits(Pageable pageable) {
+        int maxSize = 100;
+        int size = Math.min(pageable.getPageSize(), maxSize);
+
+        Sort sort =
+                pageable.getSort().isSorted()
+                        ? pageable.getSort()
+                        : Sort.by(Sort.Direction.ASC, "id");
+
+        return PageRequest.of(pageable.getPageNumber(), size, sort);
+    }
+
+    // public NinjaListResponse getNinjas(UUID facilityId, int page, int size) {
+    //     Page<Ninja> ninjaPage =
+    //             ninjaRepository.findByFacilityId(facilityId, PageRequest.of(page, size));
+    //     List<NinjaResponse> ninjas =
+    //             ninjaPage.getContent().stream().map(NinjaResponse::summary).toList();
+    //     return new NinjaListResponse(ninjas, ninjaPage.getTotalElements());
+    // }
 
     public Optional<NinjaResponse> getNinja(UUID facilityId, String studentId) {
         return ninjaRepository
@@ -64,23 +84,17 @@ public class NinjaService {
                 .map(NinjaResponse::from);
     }
 
-    @Transactional
-    public SyncResponse syncAllNinjas(UUID facilityId) {
-        // TODO: Implement actual Code Ninjas API integration
-        // For now, return a placeholder response
-        List<String> errors = new ArrayList<>();
-
-        // This would normally fetch from Code Ninjas API
-        // List<ExternalNinjaData> externalData = codeNinjasApiClient.fetchStudents(facilityId);
-
-        return SyncResponse.facilitySync(0, 0, 0, errors);
-    }
-
-    @Transactional
-    public SingleSyncResponse syncSingleNinja(UUID facilityId, String studentId) {
-        throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST, "Use syncSingleNinja with login payload");
-    }
+    // @Transactional
+    // public SyncResponse syncAllNinjas(UUID facilityId) {
+    //     // TODO: Implement actual Code Ninjas API integration
+    //     // For now, return a placeholder response
+    //     List<String> errors = new ArrayList<>();
+    //
+    //     // This would normally fetch from Code Ninjas API
+    //     // List<ExternalNinjaData> externalData = codeNinjasApiClient.fetchStudents(facilityId);
+    //
+    //     return SyncResponse.facilitySync(0, 0, 0, errors);
+    // }
 
     @Transactional
     public SingleSyncResponse syncSingleNinjaLocal(

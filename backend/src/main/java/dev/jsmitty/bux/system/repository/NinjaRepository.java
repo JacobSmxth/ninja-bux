@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @Repository
 public interface NinjaRepository extends JpaRepository<Ninja, Long> {
-    Page<Ninja> findByFacilityId(UUID facilityId, Pageable pageable);
+    Page<Ninja> findByFacilityId(UUID facilityId, Pageable effective);
 
     List<Ninja> findByFacilityId(UUID facilityId);
 
