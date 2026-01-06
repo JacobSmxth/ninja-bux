@@ -1,10 +1,14 @@
-import { get } from '../api/client';
-import { getCurrentFacilityId } from '../state';
-import { renderNavbar, setupNavbarListeners } from '../components/navbar';
-import type { NinjaListResponse, PurchaseListResponse, ShopListResponse } from '../types';
+import { get } from "../api/client";
+import { getCurrentFacilityId } from "../state";
+import { renderNavbar, setupNavbarListeners } from "../components/navbar";
+import type {
+  NinjaListResponse,
+  PurchaseListResponse,
+  ShopListResponse,
+} from "../types";
 
 export async function renderDashboard() {
-  const app = document.getElementById('app')!;
+  const app = document.getElementById("app")!;
   const facilityId = getCurrentFacilityId();
 
   app.innerHTML = `
@@ -49,9 +53,11 @@ export async function renderDashboard() {
   const shopItems = shopRes.data?.items || [];
 
   const totalBux = ninjas.reduce((sum, n) => sum + n.currentBalance, 0);
-  const pendingPurchases = purchases.filter(p => p.status === 'PENDING').length;
+  const pendingPurchases = purchases.filter(
+    (p) => p.status === "PENDING",
+  ).length;
 
-  const statsGrid = document.getElementById('stats-grid')!;
+  const statsGrid = document.getElementById("stats-grid")!;
   statsGrid.innerHTML = `
     <div class="stat-card">
       <div class="stat-icon">N</div>

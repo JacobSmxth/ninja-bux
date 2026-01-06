@@ -1,10 +1,10 @@
-import { post } from '../api/client';
-import { setState } from '../state';
-import { navigate } from '../router';
-import type { LoginResponse } from '../types';
+import { post } from "../api/client";
+import { setState } from "../state";
+import { navigate } from "../router";
+import type { LoginResponse } from "../types";
 
 export async function renderLogin() {
-  const app = document.getElementById('app')!;
+  const app = document.getElementById("app")!;
 
   app.innerHTML = `
     <div class="login-body">
@@ -29,31 +29,44 @@ export async function renderLogin() {
     </div>
   `;
 
-  const form = document.getElementById('login-form') as HTMLFormElement;
-  const errorDiv = document.getElementById('login-error')!;
+  const form = document.getElementById("login-form") as HTMLFormElement;
+  const errorDiv = document.getElementById("login-error")!;
 
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    errorDiv.style.display = 'none';
+    errorDiv.style.display = "none";
 
-    const username = (document.getElementById('username') as HTMLInputElement).value;
-    const password = (document.getElementById('password') as HTMLInputElement).value;
+    const username = (document.getElementById("username") as HTMLInputElement)
+      .value;
+    const password = (document.getElementById("password") as HTMLInputElement)
+      .value;
 
-    const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const submitBtn = form.querySelector(
+      'button[type="submit"]',
+    ) as HTMLButtonElement;
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Logging in...';
+    submitBtn.textContent = "Logging in...";
 
-    const response = await post<LoginResponse>('/api/auth/login', { username, password });
+    const response = await post<LoginResponse>("/api/auth/login", {
+      username,
+      password,
+    });
 
     if (response.error) {
       errorDiv.textContent = response.error;
-      errorDiv.style.display = 'block';
+      errorDiv.style.display = "block";
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Login';
+      submitBtn.textContent = "Login";
       return;
     }
 
-    const { token, adminId, username: adminUsername, superAdmin, facilities } = response.data!;
+    const {
+      token,
+      adminId,
+      username: adminUsername,
+      superAdmin,
+      facilities,
+    } = response.data!;
 
     setState({
       token,
@@ -64,6 +77,6 @@ export async function renderLogin() {
       currentFacilityId: facilities[0]?.id || null,
     });
 
-    navigate('/dashboard');
+    navigate("/dashboard");
   });
 }

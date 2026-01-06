@@ -63,7 +63,7 @@ export interface ShopListResponse {
   items: ShopItem[];
 }
 
-export type PurchaseStatus = 'PENDING' | 'FULFILLED' | 'CANCELLED';
+export type PurchaseStatus = "PENDING" | "FULFILLED" | "CANCELLED";
 
 export interface Purchase {
   id: number;
@@ -83,7 +83,7 @@ export interface PurchaseListResponse {
 export interface LedgerTxn {
   id: number;
   amount: number;
-  type: 'INITIAL_BALANCE' | 'ACTIVITY_REWARD' | 'PURCHASE' | 'ADJUSTMENT';
+  type: "INITIAL_BALANCE" | "ACTIVITY_REWARD" | "PURCHASE" | "ADJUSTMENT";
   description: string;
   createdAt: string;
 }

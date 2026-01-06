@@ -1,7 +1,9 @@
-@use 'variables' as *;
+@use "variables" as *;
 
 // Reset
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -21,31 +23,60 @@ body {
   line-height: 1.5;
 }
 
-a { color: inherit; text-decoration: none; }
-button { font-family: inherit; cursor: pointer; border: none; background: none; }
-ul { list-style: none; }
-img { max-width: 100%; display: block; }
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+ul {
+  list-style: none;
+}
+img {
+  max-width: 100%;
+  display: block;
+}
 
 #app {
   min-height: 100vh;
 }
 
 // Utility classes
-.text-center { text-align: center; }
-.text-muted { color: $text-muted; }
-.text-success { color: $success; }
-.text-danger { color: $danger; }
-.font-bold { font-weight: 700; }
-.font-black { font-weight: 900; }
+.text-center {
+  text-align: center;
+}
+.text-muted {
+  color: $text-muted;
+}
+.text-success {
+  color: $success;
+}
+.text-danger {
+  color: $danger;
+}
+.font-bold {
+  font-weight: 700;
+}
+.font-black {
+  font-weight: 900;
+}
 
-.loading, .error, .empty {
+.loading,
+.error,
+.empty {
   text-align: center;
   padding: $space-xl;
   color: $text-secondary;
   font-style: italic;
 }
 
-.error { color: $danger; }
+.error {
+  color: $danger;
+}
 
 // Buttons
 .btn {
@@ -79,35 +110,45 @@ img { max-width: 100%; display: block; }
     color: white;
     box-shadow: 0 6px 16px rgba($primary, 0.35);
 
-    &:hover:not(:disabled) { box-shadow: 0 8px 20px rgba($primary, 0.45); }
+    &:hover:not(:disabled) {
+      box-shadow: 0 8px 20px rgba($primary, 0.45);
+    }
   }
 
   &-secondary {
     background: $secondary;
     color: white;
 
-    &:hover:not(:disabled) { background: lighten($secondary, 8%); }
+    &:hover:not(:disabled) {
+      background: lighten($secondary, 8%);
+    }
   }
 
   &-success {
     background: $success;
     color: white;
 
-    &:hover:not(:disabled) { background: darken($success, 8%); }
+    &:hover:not(:disabled) {
+      background: darken($success, 8%);
+    }
   }
 
   &-warning {
     background: $warning;
     color: $text-primary;
 
-    &:hover:not(:disabled) { background: darken($warning, 8%); }
+    &:hover:not(:disabled) {
+      background: darken($warning, 8%);
+    }
   }
 
   &-danger {
     background: $danger;
     color: white;
 
-    &:hover:not(:disabled) { background: darken($danger, 8%); }
+    &:hover:not(:disabled) {
+      background: darken($danger, 8%);
+    }
   }
 
   &-sm {
@@ -206,9 +247,12 @@ img { max-width: 100%; display: block; }
         background: rgba(255, 255, 255, 0.06);
         transition: all $transition-base;
 
-        .caret { font-size: 0.8rem; }
+        .caret {
+          font-size: 0.8rem;
+        }
 
-        &:hover, &.active {
+        &:hover,
+        &.active {
           color: white;
           background: rgba(255, 255, 255, 0.12);
         }
@@ -248,7 +292,9 @@ img { max-width: 100%; display: block; }
       }
 
       &.open {
-        .dropdown-menu { display: flex; }
+        .dropdown-menu {
+          display: flex;
+        }
       }
     }
   }
@@ -346,14 +392,18 @@ img { max-width: 100%; display: block; }
     font-size: $font-size-sm;
   }
 
-  input, select, textarea {
+  input,
+  select,
+  textarea {
     width: 100%;
     padding: $space-sm $space-md;
     font-family: inherit;
     font-size: $font-size-base;
     border: 2px solid $border-color;
     border-radius: $radius-md;
-    transition: border-color $transition-base, box-shadow $transition-base;
+    transition:
+      border-color $transition-base,
+      box-shadow $transition-base;
     background: white;
 
     &:focus {
@@ -397,7 +447,8 @@ img { max-width: 100%; display: block; }
     min-width: 200px;
     max-width: 300px;
 
-    input, select {
+    input,
+    select {
       width: 100%;
       padding: $space-sm $space-md;
       font-family: inherit;
@@ -427,7 +478,8 @@ img { max-width: 100%; display: block; }
   width: 100%;
   border-collapse: collapse;
 
-  th, td {
+  th,
+  td {
     padding: $space-md;
     text-align: left;
     border-bottom: 1px solid $border-color;
@@ -512,12 +564,14 @@ img { max-width: 100%; display: block; }
   text-transform: uppercase;
   letter-spacing: 0.3px;
 
-  &.status-active, &.status-fulfilled {
+  &.status-active,
+  &.status-fulfilled {
     background: rgba($success, 0.12);
     color: darken($success, 10%);
   }
 
-  &.status-inactive, &.status-cancelled {
+  &.status-inactive,
+  &.status-cancelled {
     background: rgba($text-muted, 0.15);
     color: $text-secondary;
   }
@@ -540,12 +594,13 @@ img { max-width: 100%; display: block; }
 }
 
 @each $belt, $color in $belt-colors {
-  .belt-#{$belt}, .belt-#{$belt}-belt {
+  .belt-#{$belt},
+  .belt-#{$belt}-belt {
     background: $color;
-    @if $belt == 'white' {
+    @if $belt == "white" {
       color: $ninja-black;
       border: 1px solid $ninja-black;
-    } @else if $belt == 'yellow' {
+    } @else if $belt == "yellow" {
       color: $ninja-black;
     } @else {
       color: white;
@@ -569,7 +624,9 @@ img { max-width: 100%; display: block; }
   display: flex;
   align-items: center;
   gap: $space-md;
-  transition: transform $transition-slow, box-shadow $transition-slow;
+  transition:
+    transform $transition-slow,
+    box-shadow $transition-slow;
 
   &:hover {
     transform: translateY(-2px);
@@ -579,7 +636,11 @@ img { max-width: 100%; display: block; }
   .stat-icon {
     width: 56px;
     height: 56px;
-    background: linear-gradient(135deg, rgba($primary, 0.1) 0%, rgba($primary, 0.05) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba($primary, 0.1) 0%,
+      rgba($primary, 0.05) 100%
+    );
     color: $primary;
     border-radius: $radius-md;
     display: flex;
@@ -851,8 +912,12 @@ img { max-width: 100%; display: block; }
 
 // Animations
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
