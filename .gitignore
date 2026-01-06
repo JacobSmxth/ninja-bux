@@ -37,3 +37,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### AI Review ###
+.claude/
+
+### Docs ###
+POTENTIAL_VULNS.md
