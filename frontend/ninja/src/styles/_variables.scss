@@ -1,10 +1,15 @@
 // Fonts
-$font-family: 'azo-sans-web', 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+$font-family:
+  "azo-sans-web",
+  "Montserrat",
+  -apple-system,
+  BlinkMacSystemFont,
+  sans-serif;
 
 // Brand colors
-$ninja-red: #E31E24;
+$ninja-red: #e31e24;
 $ninja-black: #000000;
-$ninja-white: #FFFFFF;
+$ninja-white: #ffffff;
 $ninja-gray: #666666;
 $light-gray: #f5f5f5;
 
@@ -29,25 +34,25 @@ $border-color: #e5e7eb;
 
 // Belt colors
 $belt-colors: (
-  'white': #ffffff,
-  'yellow': #ffd700,
-  'orange': #ff8c00,
-  'green': #32cd32,
-  'blue': #4169e1,
-  'purple': #9370db,
-  'red': #dc143c,
-  'brown': #8b4513,
-  'black': #1a1a1a
+  "white": #ffffff,
+  "yellow": #ffd700,
+  "orange": #ff8c00,
+  "green": #32cd32,
+  "blue": #4169e1,
+  "purple": #9370db,
+  "red": #dc143c,
+  "brown": #8b4513,
+  "black": #1a1a1a,
 );
 
-$white-belt: map-get($belt-colors, 'white');
-$yellow-belt: map-get($belt-colors, 'yellow');
-$orange-belt: map-get($belt-colors, 'orange');
-$green-belt: map-get($belt-colors, 'green');
-$blue-belt: map-get($belt-colors, 'blue');
-$purple-belt: map-get($belt-colors, 'purple');
-$red-belt: map-get($belt-colors, 'red');
-$black-belt: map-get($belt-colors, 'black');
+$white-belt: map-get($belt-colors, "white");
+$yellow-belt: map-get($belt-colors, "yellow");
+$orange-belt: map-get($belt-colors, "orange");
+$green-belt: map-get($belt-colors, "green");
+$blue-belt: map-get($belt-colors, "blue");
+$purple-belt: map-get($belt-colors, "purple");
+$red-belt: map-get($belt-colors, "red");
+$black-belt: map-get($belt-colors, "black");
 
 // Spacing
 $space-xs: 6px;

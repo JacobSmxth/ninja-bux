@@ -1,6 +1,6 @@
-import type { ApiResponse } from '../types';
+import type { ApiResponse } from "../types";
 
-const BASE_URL = '/api';
+const BASE_URL = "/api";
 
 export async function get<T>(url: string): Promise<ApiResponse<T>> {
   try {
@@ -16,11 +16,14 @@ export async function get<T>(url: string): Promise<ApiResponse<T>> {
   }
 }
 
-export async function post<T>(url: string, body: unknown): Promise<ApiResponse<T>> {
+export async function post<T>(
+  url: string,
+  body: unknown,
+): Promise<ApiResponse<T>> {
   try {
     const response = await fetch(`${BASE_URL}${url}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
     if (!response.ok) {
@@ -34,11 +37,14 @@ export async function post<T>(url: string, body: unknown): Promise<ApiResponse<T
   }
 }
 
-export async function put<T>(url: string, body?: unknown): Promise<ApiResponse<T>> {
+export async function put<T>(
+  url: string,
+  body?: unknown,
+): Promise<ApiResponse<T>> {
   try {
     const response = await fetch(`${BASE_URL}${url}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: body ? JSON.stringify(body) : undefined,
     });
     if (!response.ok) {
@@ -55,7 +61,7 @@ export async function put<T>(url: string, body?: unknown): Promise<ApiResponse<T
 export async function del<T>(url: string): Promise<ApiResponse<T>> {
   try {
     const response = await fetch(`${BASE_URL}${url}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
     if (!response.ok) {
       const errorText = await response.text();

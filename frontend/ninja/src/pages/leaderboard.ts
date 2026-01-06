@@ -1,24 +1,32 @@
-import { get } from '../api/client';
-import { getState, isLoggedIn } from '../state';
-import { navigate } from '../router';
-import { renderNavbar } from '../components/navbar';
-import type { LeaderboardResponse, LeaderboardEntry, LeaderboardPeriod } from '../types';
+import { get } from "../api/client";
+import { getState, isLoggedIn } from "../state";
+import { navigate } from "../router";
+import { renderNavbar } from "../components/navbar";
+import type {
+  LeaderboardResponse,
+  LeaderboardEntry,
+  LeaderboardPeriod,
+} from "../types";
 
-let currentPeriod: LeaderboardPeriod = 'weekly';
+let currentPeriod: LeaderboardPeriod = "weekly";
 
-function renderLeaderboardList(entries: LeaderboardEntry[], type: 'earned' | 'spent'): string {
+function renderLeaderboardList(
+  entries: LeaderboardEntry[],
+  type: "earned" | "spent",
+): string {
   if (entries.length === 0) {
     return '<li class="empty">No data available</li>';
   }
 
   const { studentId } = getState();
 
-  return entries.map(entry => {
-    const isCurrentUser = entry.studentId === studentId;
-    const points = type === 'earned' ? entry.pointsEarned : entry.pointsSpent;
+  return entries
+    .map((entry) => {
+      const isCurrentUser = entry.studentId === studentId;
+      const points = type === "earned" ? entry.pointsEarned : entry.pointsSpent;
 
-    return `
-      <li class="leaderboard-entry ${isCurrentUser ? 'current-user' : ''}">
+      return `
+      <li class="leaderboard-entry ${isCurrentUser ? "current-user" : ""}">
         <span class="entry-rank">${entry.rank}</span>
         <div class="entry-info">
           <span class="entry-name">${entry.ninjaName}</span>
@@ -26,47 +34,60 @@ function renderLeaderboardList(entries: LeaderboardEntry[], type: 'earned' | 'sp
         <span class="entry-points">${Math.abs(points || 0)} Bux</span>
       </li>
     `;
-  }).join('');
+    })
+    .join("");
 }
 
 async function loadLeaderboards() {
   const { facilityId } = getState();
 
-  const earnedList = document.getElementById('earned-list')!;
-  const spentList = document.getElementById('spent-list')!;
+  const earnedList = document.getElementById("earned-list")!;
+  const spentList = document.getElementById("spent-list")!;
 
   earnedList.innerHTML = '<li class="loading">Loading...</li>';
   spentList.innerHTML = '<li class="loading">Loading...</li>';
 
   const [earnedRes, spentRes] = await Promise.all([
-    get<LeaderboardResponse>(`/facilities/${facilityId}/leaderboard/earned?period=${currentPeriod}`),
-    get<LeaderboardResponse>(`/facilities/${facilityId}/leaderboard/spent?period=${currentPeriod}`)
+    get<LeaderboardResponse>(
+      `/facilities/${facilityId}/leaderboard/earned?period=${currentPeriod}`,
+    ),
+    get<LeaderboardResponse>(
+      `/facilities/${facilityId}/leaderboard/spent?period=${currentPeriod}`,
+    ),
   ]);
 
   if (earnedRes.error) {
     earnedList.innerHTML = `<li class="error">Failed to load</li>`;
   } else {
-    earnedList.innerHTML = renderLeaderboardList(earnedRes.data!.leaderboard, 'earned');
+    earnedList.innerHTML = renderLeaderboardList(
+      earnedRes.data!.leaderboard,
+      "earned",
+    );
   }
 
   if (spentRes.error) {
     spentList.innerHTML = `<li class="error">Failed to load</li>`;
   } else {
-    spentList.innerHTML = renderLeaderboardList(spentRes.data!.leaderboard, 'spent');
+    spentList.innerHTML = renderLeaderboardList(
+      spentRes.data!.leaderboard,
+      "spent",
+    );
   }
 }
 
 function attachPeriodHandlers() {
-  document.querySelectorAll('.period-tab').forEach(tab => {
-    tab.addEventListener('click', async () => {
-      const period = tab.getAttribute('data-period') as LeaderboardPeriod;
+  document.querySelectorAll(".period-tab").forEach((tab) => {
+    tab.addEventListener("click", async () => {
+      const period = tab.getAttribute("data-period") as LeaderboardPeriod;
       if (period === currentPeriod) return;
 
       currentPeriod = period;
 
       // Update active tab
-      document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
+      document
+        .querySelectorAll(".period-tab")
+        .forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
 
       await loadLeaderboards();
     });
@@ -74,10 +95,10 @@ function attachPeriodHandlers() {
 }
 
 export async function renderLeaderboard() {
-  const container = document.getElementById('app')!;
+  const container = document.getElementById("app")!;
 
   if (!isLoggedIn()) {
-    navigate('/');
+    navigate("/");
     return;
   }
 
@@ -89,9 +110,9 @@ export async function renderLeaderboard() {
           <header class="leaderboard-header">
             <h1>Leaderboard</h1>
             <div class="period-tabs">
-              <button class="period-tab ${currentPeriod === 'weekly' ? 'active' : ''}" data-period="weekly">Weekly</button>
-              <button class="period-tab ${currentPeriod === 'monthly' ? 'active' : ''}" data-period="monthly">Monthly</button>
-              <button class="period-tab ${currentPeriod === 'allTime' ? 'active' : ''}" data-period="allTime">All Time</button>
+              <button class="period-tab ${currentPeriod === "weekly" ? "active" : ""}" data-period="weekly">Weekly</button>
+              <button class="period-tab ${currentPeriod === "monthly" ? "active" : ""}" data-period="monthly">Monthly</button>
+              <button class="period-tab ${currentPeriod === "allTime" ? "active" : ""}" data-period="allTime">All Time</button>
             </div>
           </header>
 

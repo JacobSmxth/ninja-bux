@@ -1,9 +1,9 @@
-import { getState, logout } from '../state';
-import { navigate } from '../router';
+import { getState, logout } from "../state";
+import { navigate } from "../router";
 
 export function renderNavbar(): string {
   const { currentNinja } = getState();
-  const name = currentNinja ? `${currentNinja.firstName}` : '';
+  const name = currentNinja ? `${currentNinja.firstName}` : "";
 
   return `
     <nav class="navbar">
@@ -29,11 +29,11 @@ export function renderNavbar(): string {
 }
 
 export function attachNavbarHandlers() {
-  const logoutBtn = document.getElementById('logout-btn');
+  const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
+    logoutBtn.addEventListener("click", () => {
       logout();
-      navigate('/');
+      navigate("/");
     });
   }
 }

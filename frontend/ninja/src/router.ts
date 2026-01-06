@@ -13,7 +13,7 @@ export function route(path: string, handler: RouteHandler) {
   const paramNames: string[] = [];
   const pattern = path.replace(/:([^/]+)/g, (_match, paramName) => {
     paramNames.push(paramName);
-    return '([^/]+)';
+    return "([^/]+)";
   });
   routes.push({
     pattern: new RegExp(`^${pattern}$`),
@@ -27,7 +27,7 @@ export function navigate(path: string) {
 }
 
 function handleRoute() {
-  const hash = window.location.hash.slice(1) || '/';
+  const hash = window.location.hash.slice(1) || "/";
 
   for (const { pattern, handler, paramNames } of routes) {
     const match = hash.match(pattern);
@@ -42,13 +42,13 @@ function handleRoute() {
   }
 
   // Default to root if no match
-  const rootRoute = routes.find(r => r.pattern.test('/'));
+  const rootRoute = routes.find((r) => r.pattern.test("/"));
   if (rootRoute) {
     rootRoute.handler({});
   }
 }
 
 export function initRouter() {
-  window.addEventListener('hashchange', handleRoute);
+  window.addEventListener("hashchange", handleRoute);
   handleRoute();
 }

@@ -1,9 +1,13 @@
 // Transaction types
-export type TxnType = 'INITIAL_BALANCE' | 'ACTIVITY_REWARD' | 'PURCHASE' | 'ADJUSTMENT';
+export type TxnType =
+  | "INITIAL_BALANCE"
+  | "ACTIVITY_REWARD"
+  | "PURCHASE"
+  | "ADJUSTMENT";
 
-export type PurchaseStatus = 'PENDING' | 'FULFILLED' | 'CANCELLED';
+export type PurchaseStatus = "PENDING" | "FULFILLED" | "CANCELLED";
 
-export type LeaderboardPeriod = 'weekly' | 'monthly' | 'allTime';
+export type LeaderboardPeriod = "weekly" | "monthly" | "allTime";
 
 // Ninja
 export interface Ninja {
