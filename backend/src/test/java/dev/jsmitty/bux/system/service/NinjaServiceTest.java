@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -504,7 +505,13 @@ class NinjaServiceTest {
         assertThat(response.changes().initialBalance()).isEqualTo(100);
         verify(ledgerService)
                 .createTransaction(
-                        eq(facilityId), eq(studentId), eq(100), any(), anyString(), isNull());
+                        eq(facilityId),
+                        eq(studentId),
+                        eq(100),
+                        any(),
+                        anyString(),
+                        isNull(),
+                        eq(LocalDateTime.of(1970, 1, 1, 0, 0)));
     }
 
     @Test

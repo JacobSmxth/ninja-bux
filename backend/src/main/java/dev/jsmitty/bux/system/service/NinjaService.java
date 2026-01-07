@@ -35,6 +35,8 @@ public class NinjaService {
 
     private static final Logger log = LoggerFactory.getLogger(NinjaService.class);
     private static final int MAX_PAGE_SIZE = 100;
+    private static final LocalDateTime INITIAL_BALANCE_CREATED_AT =
+            LocalDateTime.of(1970, 1, 1, 0, 0);
 
     private final NinjaRepository ninjaRepository;
     private final FacilityRepository facilityRepository;
@@ -327,7 +329,8 @@ public class NinjaService {
                             + (payload.levelSequence() != null
                                     ? " Level " + payload.levelSequence()
                                     : ""),
-                    null);
+                    null,
+                    INITIAL_BALANCE_CREATED_AT);
         }
 
         changes.ninja(NinjaResponse.from(saved));

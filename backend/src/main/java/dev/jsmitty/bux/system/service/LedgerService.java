@@ -14,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -42,10 +43,26 @@ public class LedgerService {
             TxnType type,
             String description,
             Long relatedEntityId) {
+        return createTransaction(
+                facilityId, studentId, amount, type, description, relatedEntityId, null);
+    }
+
+    @Transactional
+    public LedgerTxn createTransaction(
+            UUID facilityId,
+            String studentId,
+            Integer amount,
+            TxnType type,
+            String description,
+            Long relatedEntityId,
+            LocalDateTime createdAt) {
         validateTransactionInput(facilityId, studentId, amount, type);
 
         LedgerTxn txn = new LedgerTxn(facilityId, studentId, amount, type, description);
         txn.setRelatedEntityId(relatedEntityId);
+        if (createdAt != null) {
+            txn.setCreatedAt(createdAt);
+        }
         LedgerTxn saved = ledgerTxnRepository.save(txn);
 
         updateNinjaBalance(facilityId, studentId);
