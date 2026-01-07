@@ -1,7 +1,7 @@
 import { get, post, put, del } from "../api/client";
 import { getCurrentFacilityId } from "../state";
 import { renderNavbar, setupNavbarListeners } from "../components/navbar";
-import { showModal, showAlert, closeModal } from "../components/modal";
+import { showModal, showAlert } from "../components/modal";
 import type { ShopListResponse, ShopItem } from "../types";
 
 let shopItems: ShopItem[] = [];
@@ -110,9 +110,9 @@ function renderShopTable() {
 function showItemModal(item?: ShopItem) {
   const isEdit = !!item;
 
-  showModal(
-    isEdit ? "Edit Shop Item" : "Add Shop Item",
-    `
+  showModal({
+    title: isEdit ? "Edit Shop Item" : "Add Shop Item",
+    content: `
     <form id="item-form">
       <div class="form-group">
         <label for="item-name">Name</label>
@@ -134,16 +134,12 @@ function showItemModal(item?: ShopItem) {
       </div>
     </form>
   `,
-  );
-
-  const modal = document.querySelector(".modal-overlay")!;
-  const confirmBtn = modal.querySelector(".modal-confirm");
-  if (confirmBtn) {
-    confirmBtn.addEventListener("click", async (e) => {
-      e.preventDefault();
+    showConfirm: true,
+    confirmText: isEdit ? "Save" : "Add",
+    onConfirm: async () => {
       await saveItem(item?.id);
-    });
-  }
+    },
+  });
 }
 
 async function saveItem(itemId?: number) {
@@ -160,7 +156,7 @@ async function saveItem(itemId?: number) {
 
   if (!name || !price) {
     showAlert("Please fill in required fields", "error");
-    return;
+    throw new Error("Validation failed");
   }
 
   const facilityId = getCurrentFacilityId();
@@ -181,11 +177,10 @@ async function saveItem(itemId?: number) {
 
   if (response.error) {
     showAlert(response.error, "error");
-    return;
+    throw new Error(response.error);
   }
 
   showAlert(itemId ? "Item updated!" : "Item created!", "success");
-  closeModal();
 
   // Refresh list
   const listResponse = await get<ShopListResponse>(

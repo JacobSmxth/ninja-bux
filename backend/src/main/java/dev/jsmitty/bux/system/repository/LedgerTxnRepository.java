@@ -31,9 +31,12 @@ public interface LedgerTxnRepository extends JpaRepository<LedgerTxn, Long> {
     @Query(
             "SELECT l.studentId, SUM(l.amount) as total FROM LedgerTxn l "
                     + "WHERE l.facilityId = :facilityId AND l.amount > 0 AND l.createdAt >= :since "
+                    + "AND (l.description IS NULL OR l.type <> :refundType OR l.description NOT LIKE"
+                    + " 'Refund:%') "
                     + "GROUP BY l.studentId ORDER BY total DESC")
     List<Object[]> findTopEarners(
             @Param("facilityId") UUID facilityId,
+            @Param("refundType") TxnType refundType,
             @Param("since") LocalDateTime since,
             Pageable pageable);
 

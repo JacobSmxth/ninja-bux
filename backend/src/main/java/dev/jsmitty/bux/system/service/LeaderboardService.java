@@ -30,7 +30,8 @@ public class LeaderboardService {
         LocalDateTime since = calculateSinceDate(period);
 
         List<Object[]> results =
-                ledgerTxnRepository.findTopEarners(facilityId, since, PageRequest.of(0, limit));
+                ledgerTxnRepository.findTopEarners(
+                        facilityId, TxnType.ADJUSTMENT, since, PageRequest.of(0, limit));
 
         List<LeaderboardEntry> entries = buildLeaderboardEntries(facilityId, results, true);
 
