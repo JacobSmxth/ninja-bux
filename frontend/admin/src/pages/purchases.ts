@@ -3,6 +3,7 @@ import { getCurrentFacilityId } from "../state";
 import { renderNavbar, setupNavbarListeners } from "../components/navbar";
 import { showAlert } from "../components/modal";
 import type { PurchaseListResponse, Purchase, PurchaseStatus } from "../types";
+import { formatDate, formatDateTime } from "../utils/date";
 
 let purchases: Purchase[] = [];
 let currentStatus: PurchaseStatus | "" = "PENDING";
@@ -94,7 +95,7 @@ function renderPurchasesTable() {
           ${purchase.status}
         </span>
       </td>
-      <td>${new Date(purchase.purchasedAt).toLocaleString()}</td>
+      <td>${formatDateTime(purchase.purchasedAt)}</td>
       <td class="actions">
         ${
           purchase.status === "PENDING"
@@ -104,7 +105,7 @@ function renderPurchasesTable() {
         `
             : purchase.fulfilledAt
               ? `
-          <span class="text-muted">Fulfilled ${new Date(purchase.fulfilledAt).toLocaleDateString()}</span>
+          <span class="text-muted">Fulfilled ${formatDate(purchase.fulfilledAt)}</span>
         `
               : "-"
         }

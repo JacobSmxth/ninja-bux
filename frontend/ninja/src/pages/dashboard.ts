@@ -3,6 +3,14 @@ import { navigate } from "../router";
 import { renderNavbar } from "../components/navbar";
 import type { Ninja, LedgerTxn, TxnType, LedgerResponse } from "../types";
 import { get } from "../api/client";
+import { formatDateTime } from "../utils/date";
+
+const TXN_DATE_OPTIONS: Intl.DateTimeFormatOptions = {
+  month: "short",
+  day: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+};
 
 function getTxnIcon(type: TxnType): string {
   switch (type) {
@@ -25,16 +33,6 @@ function getTxnClass(amount: number): string {
   return "neutral";
 }
 
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
 function renderTransactions(transactions: LedgerTxn[]): string {
   if (transactions.length === 0) {
     return '<li class="empty">No recent transactions</li>';
@@ -47,7 +45,7 @@ function renderTransactions(transactions: LedgerTxn[]): string {
       <span class="transaction-icon">${getTxnIcon(txn.type)}</span>
       <div class="transaction-details">
         <span class="transaction-desc">${txn.description}</span>
-        <span class="transaction-date">${formatDate(txn.createdAt)}</span>
+        <span class="transaction-date">${formatDateTime(txn.createdAt, TXN_DATE_OPTIONS, "en-US")}</span>
       </div>
       <span class="transaction-amount">${txn.amount > 0 ? "+" : ""}${txn.amount}</span>
     </li>

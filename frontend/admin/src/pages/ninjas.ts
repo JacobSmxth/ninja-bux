@@ -8,6 +8,7 @@ import type {
   AdjustmentResponse,
   LedgerResponse,
 } from "../types";
+import { formatDate } from "../utils/date";
 
 let allNinjas: Ninja[] = [];
 
@@ -114,7 +115,7 @@ function renderNinjasTable() {
       <td><span class="belt-badge belt-${ninja.courseName.toLowerCase().replace(" ", "-")}">${ninja.courseName}</span></td>
       <td>${ninja.levelName}</td>
       <td class="balance">${ninja.currentBalance} Bux</td>
-      <td>${ninja.lastSyncedAt ? new Date(ninja.lastSyncedAt).toLocaleDateString() : "Never"}</td>
+      <td>${ninja.lastSyncedAt ? formatDate(ninja.lastSyncedAt) : "Never"}</td>
       <td class="actions">
         <button class="btn btn-sm btn-secondary" data-action="ledger" data-student-id="${ninja.studentId}">Ledger</button>
         <button class="btn btn-sm btn-primary" data-action="adjust" data-student-id="${ninja.studentId}" data-name="${ninja.firstName} ${ninja.lastName}" data-balance="${ninja.currentBalance}">Adjust</button>
@@ -237,7 +238,7 @@ async function showLedgerModal(studentId: string) {
           .map(
             (txn) => `
           <tr>
-            <td>${new Date(txn.createdAt).toLocaleDateString()}</td>
+            <td>${formatDate(txn.createdAt)}</td>
             <td>${txn.description}</td>
             <td class="${txn.amount >= 0 ? "text-success" : "text-danger"}">${txn.amount >= 0 ? "+" : ""}${txn.amount}</td>
           </tr>

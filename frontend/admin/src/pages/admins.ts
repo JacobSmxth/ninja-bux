@@ -4,6 +4,7 @@ import { renderNavbar, setupNavbarListeners } from "../components/navbar";
 import { showModal, showAlert } from "../components/modal";
 import { navigate } from "../router";
 import type { AdminListResponse, AdminUser, Facility } from "../types";
+import { formatDate } from "../utils/date";
 
 let allAdmins: AdminUser[] = [];
 let allFacilities: Facility[] = [];
@@ -88,7 +89,7 @@ function renderAdminsTable() {
       <td>${admin.email}</td>
       <td><span class="badge ${admin.superAdmin ? "badge-primary" : "badge-secondary"}">${admin.superAdmin ? "Super Admin" : "Admin"}</span></td>
       <td>${admin.superAdmin ? "All" : admin.facilities.map((f) => f.name).join(", ") || "None"}</td>
-      <td>${new Date(admin.createdAt).toLocaleDateString()}</td>
+      <td>${formatDate(admin.createdAt)}</td>
       <td class="actions">
         <button class="btn btn-sm btn-secondary" data-action="edit" data-id="${admin.id}">Edit</button>
         <button class="btn btn-sm btn-danger" data-action="delete" data-id="${admin.id}" data-username="${admin.username}">Delete</button>
