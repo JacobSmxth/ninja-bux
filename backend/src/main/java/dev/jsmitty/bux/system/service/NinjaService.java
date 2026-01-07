@@ -96,22 +96,59 @@ public class NinjaService {
     //     return SyncResponse.facilitySync(0, 0, 0, errors);
     // }
 
+    // @Transactional
+    // public SingleSyncResponse syncSingleNinjaLocal(
+    //         UUID facilityId, String studentId, LocalSyncRequest payload) {
+    //     // Auto-create facility if it doesn't exist
+    //     if (!facilityRepository.existsById(facilityId)) {
+    //         String facilityName = payload.facilityName();
+    //         if (facilityName == null || facilityName.isBlank()) {
+    //             facilityName = "Facility " + facilityId.toString().substring(0, 8);
+    //         }
+    //         Facility newFacility = new Facility(facilityId, facilityName);
+    //         facilityRepository.save(newFacility);
+    //         log.info("Auto-created facility: {} ({})", facilityName, facilityId);
+    //     }
+    //
+    //     Map<String, Object> changes = upsertFromClientData(facilityId, studentId, payload);
+    //     return new SingleSyncResponse(studentId, true, changes);
+    // }
+
     @Transactional
     public SingleSyncResponse syncSingleNinjaLocal(
             UUID facilityId, String studentId, LocalSyncRequest payload) {
-        // Auto-create facility if it doesn't exist
-        if (!facilityRepository.existsById(facilityId)) {
-            String facilityName = payload.facilityName();
-            if (facilityName == null || facilityName.isBlank()) {
-                facilityName = "Facility " + facilityId.toString().substring(0, 8);
-            }
-            Facility newFacility = new Facility(facilityId, facilityName);
-            facilityRepository.save(newFacility);
-            log.info("Auto-created facility: {} ({})", facilityName, facilityId);
-        }
+        Facility facility = ensureFacilityExists(facilityId, payload);
 
-        Map<String, Object> changes = upsertFromClientData(facilityId, studentId, payload);
+        Map<String, Object> changes = upsertFromClientData(facility.getId(), studentId, payload);
+
         return new SingleSyncResponse(studentId, true, changes);
+    }
+
+    private Facility ensureFacilityExists(UUID facilityId, LocalSyncRequest payload) {
+        return facilityRepository
+                .findById(facilityId)
+                .orElseGet(() -> createFacilityWithRaceHandling(facilityId, payload));
+    }
+
+    private Facility createFacilityWithRaceHandling(UUID facilityId, LocalSyncRequest payload) {
+        String facilityName = defaultFacilityName(facilityId, payload);
+
+        try {
+            Facility created = facilityRepository.save(new Facility(facilityId, facilityName));
+            log.info("Auto-created facility: {} ({})", facilityName, facilityId);
+            return created;
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // Another request created it between our read and save
+            return facilityRepository.findById(facilityId).orElseThrow(() -> e);
+        }
+    }
+
+    private String defaultFacilityName(UUID facilityId, LocalSyncRequest payload) {
+        String name = payload.facilityName();
+        if (name == null || name.isBlank()) {
+            return "Facility " + facilityId.toString().substring(0, 8);
+        }
+        return name.trim();
     }
 
     @Transactional
