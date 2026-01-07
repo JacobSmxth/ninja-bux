@@ -74,9 +74,8 @@ public class NinjaController {
     public ResponseEntity<LedgerResponse> getLedger(
             @PathVariable UUID facilityId,
             @PathVariable String studentId,
-            @RequestParam(defaultValue = "50") int limit,
-            @RequestParam(defaultValue = "0") int offset) {
+            Pageable pageable) {
         // Public endpoint - no auth check needed
-        return ResponseEntity.ok(ledgerService.getLedger(facilityId, studentId, limit, offset));
+        return ResponseEntity.ok(ledgerService.getLedger(facilityId, studentId, pageable));
     }
 }
