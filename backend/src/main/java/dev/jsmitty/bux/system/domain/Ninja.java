@@ -1,6 +1,7 @@
 package dev.jsmitty.bux.system.domain;
 
 import jakarta.persistence.*;
+import jakarta.persistence.Index;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -8,7 +9,8 @@ import java.util.UUID;
 @Entity
 @Table(
         name = "ninjas",
-        uniqueConstraints = {@UniqueConstraint(columnNames = {"student_id", "facility_id"})})
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"student_id", "facility_id"})},
+        indexes = {@Index(name = "idx_ninja_facility_student", columnList = "facility_id, student_id")})
 public class Ninja {
 
     @Id
