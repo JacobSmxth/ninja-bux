@@ -1,12 +1,19 @@
 package dev.jsmitty.bux.system.domain;
 
 import jakarta.persistence.*;
+import jakarta.persistence.Index;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "ledger_txns")
+@Table(
+        name = "ledger_txns",
+        indexes = {
+            @Index(
+                    name = "idx_ledger_facility_student_created",
+                    columnList = "facility_id, student_id, created_at DESC")
+        })
 public class LedgerTxn {
 
     @Id
