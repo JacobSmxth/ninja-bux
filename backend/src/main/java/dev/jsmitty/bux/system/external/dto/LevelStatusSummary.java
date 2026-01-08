@@ -2,6 +2,11 @@ package dev.jsmitty.bux.system.external.dto;
 
 import java.util.Map;
 
+/**
+ * Summarized level completion data from Code Ninjas.
+ *
+ * <p>Used by sync logic to calculate step progression rewards.
+ */
 public record LevelStatusSummary(
         String programId,
         String courseId,

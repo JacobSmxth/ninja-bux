@@ -6,6 +6,12 @@ import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * JPA entity for the {@code adjustments} table.
+ *
+ * <p>Represents a manual balance adjustment made by an admin. Each adjustment
+ * is mirrored by a ledger transaction to keep balances consistent.
+ */
 @Entity
 @Table(name = "adjustments")
 public class Adjustment {
@@ -20,6 +26,7 @@ public class Adjustment {
     @Column(name = "student_id", nullable = false)
     private String studentId;
 
+    /** Admin id that performed the adjustment (not enforced by FK). */
     @Column(name = "admin_id", nullable = false)
     private Long adminId;
 

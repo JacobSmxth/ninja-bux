@@ -14,6 +14,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Data access for {@link dev.jsmitty.bux.system.domain.LedgerTxn}.
+ *
+ * <p>Used by {@link dev.jsmitty.bux.system.service.LedgerService} for balance calculations and
+ * by {@link dev.jsmitty.bux.system.service.LeaderboardService} for top earner/spender queries.
+ */
 @Repository
 public interface LedgerTxnRepository extends JpaRepository<LedgerTxn, Long> {
     Page<LedgerTxn> findByFacilityIdAndStudentIdOrderByCreatedAtDesc(
@@ -22,12 +28,14 @@ public interface LedgerTxnRepository extends JpaRepository<LedgerTxn, Long> {
     List<LedgerTxn> findByFacilityIdAndStudentIdOrderByCreatedAtDesc(
             UUID facilityId, String studentId);
 
+    /** Sum all ledger amounts for a student to compute current balance. */
     @Query(
             "SELECT COALESCE(SUM(l.amount), 0) FROM LedgerTxn l WHERE l.facilityId = :facilityId"
                     + " AND l.studentId = :studentId")
     Integer calculateBalance(
             @Param("facilityId") UUID facilityId, @Param("studentId") String studentId);
 
+    /** Aggregate earned bux (positive amounts) since the given date, excluding refunds. */
     @Query(
             "SELECT l.studentId, SUM(l.amount) as total FROM LedgerTxn l "
                     + "WHERE l.facilityId = :facilityId AND l.amount > 0 AND l.createdAt >= :since "
@@ -40,6 +48,7 @@ public interface LedgerTxnRepository extends JpaRepository<LedgerTxn, Long> {
             @Param("since") LocalDateTime since,
             Pageable pageable);
 
+    /** Aggregate spend net of refunds for leaderboard display. */
     @Query(
             "SELECT l.studentId, ABS(SUM(l.amount)) as total FROM LedgerTxn l WHERE l.facilityId ="
                 + " :facilityId AND l.createdAt >= :since AND ((l.type = :purchaseType AND l.amount"

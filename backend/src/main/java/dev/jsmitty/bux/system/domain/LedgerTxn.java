@@ -6,6 +6,13 @@ import jakarta.persistence.Index;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * JPA entity for the {@code ledger_txns} table.
+ *
+ * <p>Represents the source-of-truth balance history. Positive amounts award bux, negative
+ * amounts spend bux. Created by {@link dev.jsmitty.bux.system.service.LedgerService} for
+ * sync rewards, purchases, and adjustments.
+ */
 @Entity
 @Table(
         name = "ledger_txns",
@@ -26,6 +33,7 @@ public class LedgerTxn {
     @Column(name = "student_id", nullable = false)
     private String studentId;
 
+    /** Signed amount; positive earns, negative spends. */
     @Column(nullable = false)
     private Integer amount;
 
@@ -35,6 +43,7 @@ public class LedgerTxn {
 
     private String description;
 
+    /** Optional link to a purchase or adjustment id (not enforced by FK). */
     @Column(name = "related_entity_id")
     private Long relatedEntityId;
 

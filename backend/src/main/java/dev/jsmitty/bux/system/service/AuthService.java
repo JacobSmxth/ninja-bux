@@ -16,6 +16,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Authentication and login orchestration.
+ *
+ * <p>Validates admin credentials via Spring Security and returns a JWT plus facility
+ * access list for the UI.
+ */
 @Service
 public class AuthService {
 

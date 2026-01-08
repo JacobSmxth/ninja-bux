@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Exposes Code Ninjas group data through this backend.
+ */
 @RestController
 @RequestMapping("/api/cn/groups")
 public class GroupController {
@@ -19,6 +22,7 @@ public class GroupController {
         this.codeNinjasApiClient = codeNinjasApiClient;
     }
 
+    /** Fetch current group details from Code Ninjas. */
     @GetMapping("/current")
     public ResponseEntity<String> getCurrentGroup(
             @RequestHeader("Authorization") String authorization,

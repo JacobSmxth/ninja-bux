@@ -5,6 +5,9 @@ import dev.jsmitty.bux.system.domain.Admin;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Response payload describing an admin user.
+ */
 public record AdminResponse(
         Long id,
         String username,

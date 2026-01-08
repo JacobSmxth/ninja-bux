@@ -5,6 +5,11 @@ import dev.jsmitty.bux.system.domain.PurchaseStatus;
 
 import java.time.LocalDateTime;
 
+/**
+ * Response payload for purchase creation and status updates.
+ *
+ * <p>Built by {@link dev.jsmitty.bux.system.service.PurchaseService}.
+ */
 public record PurchaseResponse(
         Long purchaseId,
         String itemName,

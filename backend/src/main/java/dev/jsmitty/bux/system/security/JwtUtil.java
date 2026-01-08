@@ -13,6 +13,11 @@ import java.util.function.Function;
 
 import javax.crypto.SecretKey;
 
+/**
+ * JWT helper for generating and validating admin tokens.
+ *
+ * <p>Used by {@link dev.jsmitty.bux.system.service.AuthService} and the auth filter.
+ */
 @Component
 public class JwtUtil {
 
@@ -26,6 +31,9 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Build a signed JWT that includes the admin id as a custom claim.
+     */
     public String generateToken(Long adminId, String username) {
         return Jwts.builder()
                 .subject(username)

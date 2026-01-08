@@ -275,67 +275,69 @@ class NinjaServiceTest {
     // ==================== Reward Logic Tests ====================
 
     @Test
-    void syncSingleNinjaLocal_awardsActivityRewardOnProgression() {
+    void syncSingleNinjaLocal_awardsStepRewardOnProgression() {
         UUID facilityId = UUID.randomUUID();
         String studentId = "student-progress";
         Ninja existingNinja = new Ninja(studentId, facilityId);
-        existingNinja.setLastActivitySequence(5);
+        existingNinja.setLevelSequence(1); // Same level
+        existingNinja.setLastCompletedSteps(5); // Was at 5 steps
         Facility facility = new Facility(facilityId, "Test Facility");
 
         LocalSyncRequest request =
                 new LocalSyncRequest(
                         "Progress",
                         "Student",
-                        "CREATE",
+                        "Yellow Belt",
                         null,
-                        1,
+                        1, // Same level
                         "act-1",
                         8,
                         null,
                         null,
-                        null,
-                        null,
+                        10, // Now at 10 steps (5 new steps)
+                        15,
                         null,
                         null);
 
         when(facilityRepository.findById(facilityId)).thenReturn(Optional.of(facility));
         when(ninjaRepository.findByFacilityIdAndStudentIdForUpdate(facilityId, studentId))
                 .thenReturn(Optional.of(existingNinja));
-        when(pointCalculator.getBeltMultiplier("CREATE")).thenReturn(10);
+        when(pointCalculator.getBeltMultiplier("Yellow Belt")).thenReturn(2);
         when(ninjaRepository.save(any(Ninja.class))).thenAnswer(inv -> inv.getArgument(0));
 
         SingleSyncResponse response =
                 ninjaService.syncSingleNinjaLocal(facilityId, studentId, request);
 
-        assertThat(response.changes().activityReward()).isEqualTo(30); // 3 activities * 10
-        assertThat(response.changes().activitiesCompleted()).isEqualTo(3);
+        assertThat(response.changes().stepReward()).isEqualTo(10); // 5 steps * 2 multiplier
+        assertThat(response.changes().stepsAwarded()).isEqualTo(5);
         verify(ledgerService)
                 .createTransaction(
-                        eq(facilityId), eq(studentId), eq(30), any(), anyString(), isNull());
+                        eq(facilityId), eq(studentId), eq(10), any(), anyString(), isNull());
     }
 
     @Test
-    void syncSingleNinjaLocal_noActivityRewardWhenSequenceDecreases() {
+    void syncSingleNinjaLocal_noStepRewardWhenStepsDecrease() {
         UUID facilityId = UUID.randomUUID();
         String studentId = "student-regress";
         Ninja existingNinja = new Ninja(studentId, facilityId);
-        existingNinja.setLastActivitySequence(10);
+        existingNinja.setLevelSequence(1);
+        existingNinja.setLastCompletedSteps(10);
         Facility facility = new Facility(facilityId, "Test Facility");
 
-        // New activity sequence is LOWER than existing
+        // Steps decreased within same level (edge case - shouldn't normally happen)
         LocalSyncRequest request =
                 new LocalSyncRequest(
                         "Regress",
                         "Student",
-                        "JR",
+                        "White Belt",
                         null,
-                        1,
+                        1, // Same level
                         "act-1",
                         5,
                         null,
                         null,
-                        null,
-                        null,
+                        5, // Steps went down to 5
+                        15,
                         null,
                         null);
 
@@ -347,9 +349,53 @@ class NinjaServiceTest {
         SingleSyncResponse response =
                 ninjaService.syncSingleNinjaLocal(facilityId, studentId, request);
 
-        assertThat(response.changes().activityReward()).isNull();
+        assertThat(response.changes().stepReward()).isNull();
         assertThat(response.changes().updated()).isTrue();
         verify(ledgerService, never()).createTransaction(any(), any(), anyInt(), any(), any(), any());
+    }
+
+    @Test
+    void syncSingleNinjaLocal_awardsStepRewardWhenLevelChanges() {
+        UUID facilityId = UUID.randomUUID();
+        String studentId = "student-level-change";
+        Ninja existingNinja = new Ninja(studentId, facilityId);
+        existingNinja.setLevelSequence(1);
+        existingNinja.setLastCompletedSteps(10); // Old level had 10 steps
+        Facility facility = new Facility(facilityId, "Test Facility");
+
+        // Level changed from 1 to 2
+        LocalSyncRequest request =
+                new LocalSyncRequest(
+                        "Level",
+                        "Change",
+                        "White Belt",
+                        null,
+                        2, // NEW level
+                        "act-2",
+                        9,
+                        null,
+                        null,
+                        5, // Steps in NEW level - should award all 5
+                        10,
+                        null,
+                        null);
+
+        when(facilityRepository.findById(facilityId)).thenReturn(Optional.of(facility));
+        when(ninjaRepository.findByFacilityIdAndStudentIdForUpdate(facilityId, studentId))
+                .thenReturn(Optional.of(existingNinja));
+        when(pointCalculator.getBeltMultiplier("White Belt")).thenReturn(1);
+        when(pointCalculator.getProgressionMultiplier("White Belt")).thenReturn(10);
+        when(ninjaRepository.save(any(Ninja.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        SingleSyncResponse response =
+                ninjaService.syncSingleNinjaLocal(facilityId, studentId, request);
+
+        // Should award for all 5 steps in new level + level progression
+        assertThat(response.changes().stepReward()).isEqualTo(5);
+        assertThat(response.changes().stepsAwarded()).isEqualTo(5);
+        assertThat(response.changes().levelProgressionReward()).isEqualTo(10); // 1 level * 10
+        // 2 transactions: step reward + level progression
+        verify(ledgerService, times(2)).createTransaction(any(), any(), anyInt(), any(), any(), any());
     }
 
     @Test
@@ -431,27 +477,28 @@ class NinjaServiceTest {
     }
 
     @Test
-    void syncSingleNinjaLocal_awardsBothActivityAndLevelRewards() {
+    void syncSingleNinjaLocal_awardsBothStepAndLevelRewards() {
         UUID facilityId = UUID.randomUUID();
         String studentId = "student-both";
         Ninja existingNinja = new Ninja(studentId, facilityId);
         existingNinja.setLevelSequence(1);
-        existingNinja.setLastActivitySequence(5);
+        existingNinja.setLastCompletedSteps(5); // Old level had 5 steps
         Facility facility = new Facility(facilityId, "Test Facility");
 
+        // Level changed from 1 to 3, new level has 10 steps completed
         LocalSyncRequest request =
                 new LocalSyncRequest(
                         "Both",
                         "Rewards",
                         "White Belt",
                         null,
-                        3,
+                        3, // Level progression (1 -> 3)
                         "act-1",
                         10,
                         null,
                         null,
-                        null,
-                        null,
+                        10, // 10 steps in NEW level (all awarded since level changed)
+                        15,
                         null,
                         null);
 
@@ -465,7 +512,7 @@ class NinjaServiceTest {
         SingleSyncResponse response =
                 ninjaService.syncSingleNinjaLocal(facilityId, studentId, request);
 
-        assertThat(response.changes().activityReward()).isEqualTo(5); // 5 activities * 1
+        assertThat(response.changes().stepReward()).isEqualTo(10); // 10 steps in new level * 1
         assertThat(response.changes().levelProgressionReward()).isEqualTo(20); // 2 levels * 10
         assertThat(response.changes().updated()).isFalse(); // rewards were given
         verify(ledgerService, times(2)).createTransaction(any(), any(), anyInt(), any(), any(), any());

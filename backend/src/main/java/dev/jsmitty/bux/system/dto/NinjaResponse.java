@@ -4,6 +4,9 @@ import dev.jsmitty.bux.system.domain.Ninja;
 
 import java.time.LocalDateTime;
 
+/**
+ * API representation of a ninja profile and progress snapshot.
+ */
 public record NinjaResponse(
         Long id,
         String studentId,

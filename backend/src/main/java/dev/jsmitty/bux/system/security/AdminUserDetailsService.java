@@ -8,6 +8,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+/**
+ * Bridges {@link dev.jsmitty.bux.system.domain.Admin} to Spring Security's UserDetails.
+ *
+ * <p>Used by {@link dev.jsmitty.bux.system.security.JwtAuthenticationFilter} to resolve users.
+ */
 @Service
 public class AdminUserDetailsService implements UserDetailsService {
 

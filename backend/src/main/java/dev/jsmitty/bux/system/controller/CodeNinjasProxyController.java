@@ -8,6 +8,12 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Lightweight proxy for select Code Ninjas endpoints.
+ *
+ * <p>Used by clients that need to hit Code Ninjas directly without embedding
+ * the external base URL or headers.
+ */
 @RestController
 @RequestMapping("/api/cn")
 public class CodeNinjasProxyController {
@@ -20,6 +26,7 @@ public class CodeNinjasProxyController {
         this.restTemplate = restTemplate;
     }
 
+    /** Proxy to Code Ninjas login. */
     @PostMapping("/login")
     public ResponseEntity<?> proxyLogin(@RequestBody Map<String, Object> payload) {
         HttpHeaders headers = new HttpHeaders();
@@ -42,6 +49,7 @@ public class CodeNinjasProxyController {
         }
     }
 
+    /** Proxy to Code Ninjas current activity endpoint. */
     @GetMapping("/activity/current")
     public ResponseEntity<?> proxyCurrentActivity(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false)

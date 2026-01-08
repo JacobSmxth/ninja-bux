@@ -19,6 +19,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * Ledger transaction creation and balance retrieval.
+ *
+ * <p>Acts as the system of record for balances; all earning/spending flows call into this
+ * service to create transactions and refresh cached balances on {@code Ninja}.
+ */
 @Service
 public class LedgerService {
 

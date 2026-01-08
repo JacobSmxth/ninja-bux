@@ -13,6 +13,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+/**
+ * Ninja-facing endpoints for roster, sync, and ledger views.
+ *
+ * <p>Endpoints are currently public for kiosk/mobile use. The
+ * {@link FacilityAccessChecker} is available for future restrictions.
+ */
 @RestController
 @RequestMapping("/api/facilities/{facilityId}/ninjas")
 public class NinjaController {
@@ -30,6 +36,7 @@ public class NinjaController {
         this.accessChecker = accessChecker;
     }
 
+    /** List ninjas for a facility (public). */
     @GetMapping
     public ResponseEntity<NinjaListResponse> getNinjas(
             @PathVariable UUID facilityId,
@@ -38,6 +45,7 @@ public class NinjaController {
         return ResponseEntity.ok(ninjaService.getNinjas(facilityId, pageable));
     }
 
+    /** Fetch a single ninja by student id (public). */
     @GetMapping("/{studentId}")
     public ResponseEntity<NinjaResponse> getNinja(
             @PathVariable UUID facilityId, @PathVariable String studentId) {
@@ -54,6 +62,7 @@ public class NinjaController {
     //     return ResponseEntity.ok(ninjaService.syncAllNinjas(facilityId));
     // }
 
+    /** Remote sync using Code Ninjas login credentials. */
     @PostMapping("/{studentId}/sync")
     public ResponseEntity<SingleSyncResponse> syncSingleNinja(
             @PathVariable UUID facilityId,
@@ -62,6 +71,7 @@ public class NinjaController {
         return ResponseEntity.ok(ninjaService.syncSingleNinja(facilityId, studentId, loginRequest));
     }
 
+    /** Local/offline sync using client-provided activity payload. */
     @PostMapping("/{studentId}/sync-local")
     public ResponseEntity<SingleSyncResponse> syncSingleNinjaLocal(
             @PathVariable UUID facilityId,
@@ -70,6 +80,7 @@ public class NinjaController {
         return ResponseEntity.ok(ninjaService.syncSingleNinjaLocal(facilityId, studentId, request));
     }
 
+    /** Ledger history and current balance for a ninja (public). */
     @GetMapping("/{studentId}/ledger")
     public ResponseEntity<LedgerResponse> getLedger(
             @PathVariable UUID facilityId,

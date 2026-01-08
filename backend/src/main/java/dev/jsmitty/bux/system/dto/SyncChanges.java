@@ -6,12 +6,14 @@ import dev.jsmitty.bux.system.external.dto.LevelStatusSummary;
 /**
  * Typed DTO for sync operation results, replacing the untyped Map&lt;String, Object&gt;.
  * Contains all possible fields from both local and remote sync operations.
+ *
+ * <p>Built by {@link dev.jsmitty.bux.system.service.NinjaService}.
  */
 public record SyncChanges(
         NinjaResponse ninja,
         Integer initialBalance,
-        Integer activityReward,
-        Integer activitiesCompleted,
+        Integer stepReward,
+        Integer stepsAwarded,
         Integer levelProgressionReward,
         Integer levelDifference,
         Integer oldLevelSequence,
@@ -29,8 +31,8 @@ public record SyncChanges(
     public static class Builder {
         private NinjaResponse ninja;
         private Integer initialBalance;
-        private Integer activityReward;
-        private Integer activitiesCompleted;
+        private Integer stepReward;
+        private Integer stepsAwarded;
         private Integer levelProgressionReward;
         private Integer levelDifference;
         private Integer oldLevelSequence;
@@ -50,13 +52,13 @@ public record SyncChanges(
             return this;
         }
 
-        public Builder activityReward(Integer activityReward) {
-            this.activityReward = activityReward;
+        public Builder stepReward(Integer stepReward) {
+            this.stepReward = stepReward;
             return this;
         }
 
-        public Builder activitiesCompleted(Integer activitiesCompleted) {
-            this.activitiesCompleted = activitiesCompleted;
+        public Builder stepsAwarded(Integer stepsAwarded) {
+            this.stepsAwarded = stepsAwarded;
             return this;
         }
 
@@ -104,8 +106,8 @@ public record SyncChanges(
             return new SyncChanges(
                     ninja,
                     initialBalance,
-                    activityReward,
-                    activitiesCompleted,
+                    stepReward,
+                    stepsAwarded,
                     levelProgressionReward,
                     levelDifference,
                     oldLevelSequence,

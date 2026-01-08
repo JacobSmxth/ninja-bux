@@ -9,6 +9,12 @@ import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
+/**
+ * Data access for {@link dev.jsmitty.bux.system.domain.Adjustment}.
+ *
+ * <p>Used by {@link dev.jsmitty.bux.system.service.AdjustmentService} to list and create
+ * manual balance adjustments.
+ */
 @Repository
 public interface AdjustmentRepository extends JpaRepository<Adjustment, Long> {
     Page<Adjustment> findByFacilityIdOrderByCreatedAtDesc(UUID facilityId, Pageable pageable);

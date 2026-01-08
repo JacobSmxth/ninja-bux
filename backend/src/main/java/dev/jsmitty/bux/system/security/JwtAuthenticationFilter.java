@@ -14,6 +14,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Extracts JWTs from the Authorization header and populates the security context.
+ *
+ * <p>Registered in {@link dev.jsmitty.bux.system.security.SecurityConfig}.
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 

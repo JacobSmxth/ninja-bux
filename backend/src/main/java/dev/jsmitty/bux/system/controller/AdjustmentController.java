@@ -10,6 +10,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+/**
+ * Endpoints for manual balance adjustments.
+ *
+ * <p>Protected by facility access checks.
+ */
 @RestController
 @RequestMapping("/api/facilities/{facilityId}")
 public class AdjustmentController {
@@ -23,6 +28,7 @@ public class AdjustmentController {
         this.accessChecker = accessChecker;
     }
 
+    /** Create a manual adjustment for a ninja. */
     @PostMapping("/ninjas/{studentId}/adjustments")
     public ResponseEntity<?> createAdjustment(
             @PathVariable UUID facilityId,
@@ -39,6 +45,7 @@ public class AdjustmentController {
         }
     }
 
+    /** List recent adjustments for a facility. */
     @GetMapping("/adjustments")
     public ResponseEntity<AdjustmentListResponse> getAdjustments(
             @PathVariable UUID facilityId,

@@ -6,6 +6,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
+/**
+ * HTTP and JSON bean configuration for external API access.
+ *
+ * <p>Used by {@link dev.jsmitty.bux.system.external.CodeNinjasApiClient}.
+ */
 @Configuration
 public class HttpClientConfig {
 

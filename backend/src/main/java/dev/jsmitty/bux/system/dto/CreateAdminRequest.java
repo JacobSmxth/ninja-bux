@@ -7,6 +7,9 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Request payload for creating or updating an admin.
+ */
 public record CreateAdminRequest(
         @NotBlank(message = "Username is required")
                 @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")

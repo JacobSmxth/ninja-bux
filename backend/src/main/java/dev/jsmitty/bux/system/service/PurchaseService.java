@@ -15,6 +15,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Purchase workflow for shop items.
+ *
+ * <p>Validates availability and balance, records purchases, and writes corresponding
+ * ledger transactions for spend/refund flows.
+ */
 @Service
 public class PurchaseService {
 
@@ -34,6 +40,9 @@ public class PurchaseService {
         this.ledgerService = ledgerService;
     }
 
+    /**
+     * Creates a purchase and debits the ninja's balance via the ledger.
+     */
     @Transactional
     public PurchaseResponse makePurchase(
             UUID facilityId, String studentId, PurchaseRequest request) {

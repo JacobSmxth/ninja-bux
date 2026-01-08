@@ -5,6 +5,9 @@ import dev.jsmitty.bux.system.domain.TxnType;
 
 import java.time.LocalDateTime;
 
+/**
+ * Response projection for a single ledger transaction.
+ */
 public record LedgerTxnResponse(
         Long id, Integer amount, TxnType type, String description, LocalDateTime createdAt) {
     public static LedgerTxnResponse from(LedgerTxn txn) {

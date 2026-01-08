@@ -21,6 +21,12 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Client wrapper for the Code Ninjas Impact API.
+ *
+ * <p>Used by {@link dev.jsmitty.bux.system.service.NinjaService} and helper controllers to
+ * fetch activity, level status, group info, and login tokens.
+ */
 @Component
 public class CodeNinjasApiClient {
 
@@ -34,6 +40,9 @@ public class CodeNinjasApiClient {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Authenticate against Code Ninjas and decode the JWT for identity details.
+     */
     public CodeNinjasLoginResult login(String user, double latitude, double longitude) {
         HttpHeaders headers = defaultHeaders();
         headers.set(HttpHeaders.AUTHORIZATION, "Bearer null");
@@ -76,6 +85,9 @@ public class CodeNinjasApiClient {
         }
     }
 
+    /**
+     * Fetch the current activity record for a user.
+     */
     public CodeNinjasActivityResult getCurrentActivity(String token) {
         HttpHeaders headers = defaultHeaders();
         headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + token);
@@ -102,6 +114,9 @@ public class CodeNinjasApiClient {
         }
     }
 
+    /**
+     * Fetch level status details and summarize step completion.
+     */
     public LevelStatusSummary getLevelStatus(
             String token, String programId, String courseId, String levelId) {
         HttpHeaders headers = defaultHeaders();
@@ -135,6 +150,9 @@ public class CodeNinjasApiClient {
         }
     }
 
+    /**
+     * Fetch group membership info (raw JSON).
+     */
     public String getCurrentGroup(String token, String programId, String courseId) {
         HttpHeaders headers = defaultHeaders();
         headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + token);
@@ -167,6 +185,9 @@ public class CodeNinjasApiClient {
         }
     }
 
+    /**
+     * Fetch extended ninja info (raw JSON).
+     */
     public String getNinjaInfo(
             String token, String courseId, String userId, Boolean getBeltChangeInfo) {
         HttpHeaders headers = defaultHeaders();

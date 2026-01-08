@@ -11,6 +11,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+/**
+ * Endpoints for creating and managing purchases.
+ *
+ * <p>Purchasing is public for ninjas; fulfillment and cancellation require facility access.
+ */
 @RestController
 @RequestMapping("/api/facilities/{facilityId}")
 public class PurchaseController {
@@ -24,6 +29,7 @@ public class PurchaseController {
         this.accessChecker = accessChecker;
     }
 
+    /** Create a purchase for a ninja (public). */
     @PostMapping("/ninjas/{studentId}/purchases")
     public ResponseEntity<?> makePurchase(
             @PathVariable UUID facilityId,
@@ -39,6 +45,7 @@ public class PurchaseController {
         }
     }
 
+    /** List purchases for a facility (admin access). */
     @GetMapping("/purchases")
     public ResponseEntity<PurchaseListResponse> getPurchases(
             @PathVariable UUID facilityId,
@@ -49,6 +56,7 @@ public class PurchaseController {
         return ResponseEntity.ok(purchaseService.getPurchases(facilityId, status, limit, offset));
     }
 
+    /** Mark a purchase as fulfilled (admin access). */
     @PutMapping("/purchases/{purchaseId}/fulfill")
     public ResponseEntity<PurchaseResponse> fulfillPurchase(
             @PathVariable UUID facilityId, @PathVariable Long purchaseId) {
@@ -59,6 +67,7 @@ public class PurchaseController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /** Cancel a purchase and issue a ledger refund (admin access). */
     @PutMapping("/purchases/{purchaseId}/cancel")
     public ResponseEntity<PurchaseResponse> cancelPurchase(
             @PathVariable UUID facilityId, @PathVariable Long purchaseId) {

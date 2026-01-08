@@ -30,6 +30,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Central sync and progress update service for ninjas.
+ *
+ * <p>Supports both remote sync (via Code Ninjas API) and local sync (client-provided data),
+ * applies reward calculations, and writes ledger transactions under row-level locks.
+ */
 @Service
 public class NinjaService {
 
@@ -111,6 +117,12 @@ public class NinjaService {
         CodeNinjasActivityResult activity = codeNinjasApiClient.getCurrentActivity(login.token());
 
         LevelStatusSummary levelStatus = fetchLevelStatusIfAvailable(login.token(), activity);
+        log.info(
+                "Remote sync for {}: levelStatus={}, completedSteps={}, totalSteps={}",
+                studentId,
+                levelStatus != null ? "present" : "null",
+                levelStatus != null ? levelStatus.completedSteps() : "N/A",
+                levelStatus != null ? levelStatus.totalSteps() : "N/A");
         Integer activitySequence = extractActivitySequence(activity, levelStatus);
 
         // Phase 2: Build payload from remote data
@@ -191,8 +203,8 @@ public class NinjaService {
         return SyncChanges.builder()
                 .ninja(base.ninja())
                 .initialBalance(base.initialBalance())
-                .activityReward(base.activityReward())
-                .activitiesCompleted(base.activitiesCompleted())
+                .stepReward(base.stepReward())
+                .stepsAwarded(base.stepsAwarded())
                 .levelProgressionReward(base.levelProgressionReward())
                 .levelDifference(base.levelDifference())
                 .oldLevelSequence(base.oldLevelSequence())
@@ -277,28 +289,32 @@ public class NinjaService {
 
         // Capture old values BEFORE updating for delta calculation
         Integer oldLevelSequence = ninja.getLevelSequence();
-        Integer oldActivitySequence = ninja.getLastActivitySequence();
+        Integer oldCompletedSteps = ninja.getLastCompletedSteps();
 
         log.debug(
-                "Sync for student {}: oldLevelSeq={}, newLevelSeq={}, oldActivitySeq={}, newActivitySeq={}",
+                "Sync for student {}: oldLevelSeq={}, newLevelSeq={}, oldSteps={}, newSteps={}",
                 studentId,
                 oldLevelSequence,
                 payload.levelSequence(),
-                oldActivitySequence,
-                payload.activitySequence());
+                oldCompletedSteps,
+                payload.completedSteps());
 
         // Update ninja fields
         applyPayloadToNinja(ninja, payload);
 
+        // Update lastCompletedSteps for tracking
+        ninja.setLastCompletedSteps(payload.completedSteps());
+
         // Calculate and award progression rewards
-        boolean activityAwarded =
-                awardActivityProgression(facilityId, studentId, payload, oldActivitySequence, changes);
+        boolean stepAwarded =
+                awardStepProgression(
+                        facilityId, studentId, payload, oldCompletedSteps, oldLevelSequence, changes);
         boolean levelAwarded =
                 awardLevelProgression(facilityId, studentId, payload, oldLevelSequence, changes);
 
         Ninja saved = ninjaRepository.save(ninja);
         changes.ninja(NinjaResponse.from(saved));
-        changes.updated(!activityAwarded && !levelAwarded);
+        changes.updated(!stepAwarded && !levelAwarded);
 
         return changes.build();
     }
@@ -309,6 +325,9 @@ public class NinjaService {
 
         Ninja ninja = new Ninja(studentId, facilityId);
         applyPayloadToNinja(ninja, payload);
+
+        // Initialize lastCompletedSteps for new ninja
+        ninja.setLastCompletedSteps(payload.completedSteps());
 
         int initialBalance =
                 pointCalculator.calculateInitialBalance(
@@ -367,54 +386,85 @@ public class NinjaService {
     // ==================== REWARD CALCULATION ====================
 
     /**
-     * Awards bux for activity progression (completing activities within a level).
+     * Awards bux for step completion within levels.
+     * Points = stepsCompleted x beltMultiplier
+     *
+     * The completedSteps value is at LEVEL granularity (total steps in current level).
+     * - Same level: award for step difference (delta)
+     * - New level: award for all completed steps in the new level
      *
      * @return true if a reward was awarded
      */
-    private boolean awardActivityProgression(
+    private boolean awardStepProgression(
             UUID facilityId,
             String studentId,
             LocalSyncRequest payload,
-            Integer oldActivitySequence,
+            Integer oldCompletedSteps,
+            Integer oldLevelSequence,
             SyncChanges.Builder changes) {
 
-        if (payload.activitySequence() == null || oldActivitySequence == null) {
+        log.info(
+                "Step progression check for {}: payload.completedSteps={}, payload.levelSequence={}, oldCompletedSteps={}, oldLevelSequence={}",
+                studentId,
+                payload.completedSteps(),
+                payload.levelSequence(),
+                oldCompletedSteps,
+                oldLevelSequence);
+
+        // Skip if we don't have step data
+        if (payload.completedSteps() == null || payload.completedSteps() <= 0) {
+            log.info(
+                    "No step reward for {}: completedSteps={} (null or zero)",
+                    studentId,
+                    payload.completedSteps());
             return false;
         }
 
-        int activitiesCompleted = payload.activitySequence() - oldActivitySequence;
-        if (activitiesCompleted <= 0) {
+        int stepsCompleted;
+        boolean levelChanged = !Objects.equals(payload.levelSequence(), oldLevelSequence);
+
+        if (levelChanged) {
+            // New level: award for all completed steps in the new level
+            stepsCompleted = payload.completedSteps();
+            log.info(
+                    "Level changed from {} to {}, awarding {} steps for new level",
+                    oldLevelSequence,
+                    payload.levelSequence(),
+                    stepsCompleted);
+        } else {
+            // Same level: calculate step difference
+            int oldSteps = oldCompletedSteps != null ? oldCompletedSteps : 0;
+            stepsCompleted = payload.completedSteps() - oldSteps;
+            log.info(
+                    "Same level {}, step delta: {} - {} = {}",
+                    payload.levelSequence(),
+                    payload.completedSteps(),
+                    oldSteps,
+                    stepsCompleted);
+        }
+
+        if (stepsCompleted <= 0) {
+            log.info("No step reward for {}: stepsCompleted={} (zero or negative)", studentId, stepsCompleted);
             return false;
         }
 
-        int bucksPerActivity = pointCalculator.getBeltMultiplier(payload.courseName());
-        int totalReward = activitiesCompleted * bucksPerActivity;
+        int beltMultiplier = pointCalculator.getBeltMultiplier(payload.courseName());
+        int totalReward = stepsCompleted * beltMultiplier;
 
         String description =
-                activitiesCompleted == 1
-                        ? "Completed activity (seq "
-                                + oldActivitySequence
-                                + " → "
-                                + payload.activitySequence()
-                                + ")"
-                        : "Completed "
-                                + activitiesCompleted
-                                + " activities (seq "
-                                + oldActivitySequence
-                                + " → "
-                                + payload.activitySequence()
-                                + ")";
+                levelChanged
+                        ? "Completed " + stepsCompleted + " step" + (stepsCompleted == 1 ? "" : "s")
+                                + " in new level"
+                        : "Completed " + stepsCompleted + " step" + (stepsCompleted == 1 ? "" : "s")
+                                + " (" + (oldCompletedSteps != null ? oldCompletedSteps : 0)
+                                + " → " + payload.completedSteps() + ")";
 
         ledgerService.createTransaction(
                 facilityId, studentId, totalReward, TxnType.ACTIVITY_REWARD, description, null);
 
-        changes.activityReward(totalReward);
-        changes.activitiesCompleted(activitiesCompleted);
-        log.info(
-                "Activity reward for {}: {} activities, {} bux",
-                studentId,
-                activitiesCompleted,
-                totalReward);
+        changes.stepReward(totalReward);
+        changes.stepsAwarded(stepsCompleted);
+        log.info("Step reward for {}: {} steps, {} bux", studentId, stepsCompleted, totalReward);
 
         return true;
     }

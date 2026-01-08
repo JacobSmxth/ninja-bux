@@ -4,6 +4,9 @@ import org.springframework.data.domain.Page;
 
 import java.util.List;
 
+/**
+ * Paginated response for listing ninjas.
+ */
 public record NinjaListResponse(List<NinjaResponse> ninjas, long totalCount) {
 
     public static NinjaListResponse from(Page<NinjaResponse> page) {

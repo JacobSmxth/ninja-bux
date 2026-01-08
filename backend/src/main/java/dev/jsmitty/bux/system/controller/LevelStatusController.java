@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Exposes Code Ninjas level status summaries through this backend.
+ */
 @RestController
 @RequestMapping("/api/cn/level")
 public class LevelStatusController {
@@ -20,6 +23,7 @@ public class LevelStatusController {
         this.codeNinjasApiClient = codeNinjasApiClient;
     }
 
+    /** Fetch level status for a program/course (Code Ninjas). */
     @GetMapping("/statusinfo")
     public ResponseEntity<LevelStatusSummary> getLevelStatus(
             @RequestHeader("Authorization") String authorization,

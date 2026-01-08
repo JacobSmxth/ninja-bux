@@ -19,6 +19,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Admin CRUD and facility assignment logic.
+ *
+ * <p>Used exclusively by {@link dev.jsmitty.bux.system.controller.AdminController}.
+ * Applies validation and password encoding rules.
+ */
 @Service
 public class AdminService {
 

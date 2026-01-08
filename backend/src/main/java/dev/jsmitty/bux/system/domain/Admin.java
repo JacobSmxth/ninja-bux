@@ -8,6 +8,12 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * JPA entity for the {@code admins} table.
+ *
+ * <p>Admins authenticate via JWT and are authorized to manage facilities, shop items,
+ * purchases, and adjustments. Facilities are linked via {@code admin_facilities}.
+ */
 @Entity
 @Table(name = "admins")
 public class Admin {
@@ -28,6 +34,7 @@ public class Admin {
     @Column(nullable = false)
     private String email;
 
+    /** Facilities this admin can manage; super admins ignore this list. */
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "admin_facilities",

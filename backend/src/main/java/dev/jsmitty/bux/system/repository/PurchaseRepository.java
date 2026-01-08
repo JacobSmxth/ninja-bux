@@ -12,6 +12,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Data access for {@link dev.jsmitty.bux.system.domain.Purchase}.
+ *
+ * <p>Used by {@link dev.jsmitty.bux.system.service.PurchaseService} for creation and
+ * fulfillment flows.
+ */
 @Repository
 public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
     List<Purchase> findByFacilityId(UUID facilityId);

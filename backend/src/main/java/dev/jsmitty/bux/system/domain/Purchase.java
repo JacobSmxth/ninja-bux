@@ -5,6 +5,13 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * JPA entity for the {@code purchases} table.
+ *
+ * <p>Stores a purchase request and fulfillment status. Created by
+ * {@link dev.jsmitty.bux.system.service.PurchaseService} and linked to ledger
+ * transactions for balance updates.
+ */
 @Entity
 @Table(name = "purchases")
 public class Purchase {
@@ -22,12 +29,14 @@ public class Purchase {
     @Column(name = "shop_item_id", nullable = false)
     private Long shopItemId;
 
+    /** Snapshot of the item name at purchase time (denormalized). */
     @Column(name = "item_name", nullable = false)
     private String itemName;
 
     @Column(nullable = false)
     private Integer price;
 
+    /** Lifecycle state for fulfillment and refunds. */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PurchaseStatus status = PurchaseStatus.PENDING;

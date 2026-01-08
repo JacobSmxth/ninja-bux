@@ -7,6 +7,12 @@ import jakarta.validation.constraints.Positive;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * JPA entity for the {@code shop_items} table.
+ *
+ * <p>Represents a purchasable item scoped to a facility. Managed by
+ * {@link dev.jsmitty.bux.system.service.ShopService} and read during purchases.
+ */
 @Entity
 @Table(name = "shop_items")
 public class ShopItem {
@@ -28,6 +34,7 @@ public class ShopItem {
     @Column(nullable = false)
     private Integer price;
 
+    /** Flag for hiding/showing the item in the public shop list. */
     @Column(name = "is_available", nullable = false)
     private Boolean isAvailable = true;
 

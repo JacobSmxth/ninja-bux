@@ -63,24 +63,24 @@ class NinjaServiceConcurrencyTest {
         Facility facility = new Facility(facilityId, "Test Facility");
         facilityRepository.save(facility);
 
-        // Create ninja at activity sequence 5
+        // Create ninja with 5 completed steps in level 1
         Ninja ninja = new Ninja(studentId, facilityId);
         ninja.setFirstName("Test");
         ninja.setLastName("Ninja");
         ninja.setCourseName("White Belt");
-        ninja.setLastActivitySequence(5);
         ninja.setLevelSequence(1);
+        ninja.setLastCompletedSteps(5);
         ninjaRepository.save(ninja);
     }
 
     /**
      * Tests that concurrent sync requests for the same ninja do not result in
-     * double-awarding of activity rewards.
+     * double-awarding of step rewards.
      *
      * Scenario:
-     * - Ninja starts at activity sequence 5
-     * - 5 concurrent requests all try to sync with activity sequence 8
-     * - Expected: Only ONE reward of 3 bux (3 activities * 1 White Belt multiplier)
+     * - Ninja starts at 5 completed steps in activity "act-1"
+     * - 5 concurrent requests all try to sync with 8 completed steps
+     * - Expected: Only ONE reward of 3 bux (3 steps * 1 White Belt multiplier)
      * - Without locking: Would see 15 bux (5 requests * 3 bux each)
      */
     @Test
@@ -91,7 +91,7 @@ class NinjaServiceConcurrencyTest {
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         List<Future<?>> futures = new ArrayList<>();
 
-        // All threads will try to sync with activitySequence = 8 (delta of 3)
+        // All threads will try to sync with completedSteps = 8 (delta of 3)
         LocalSyncRequest request =
                 new LocalSyncRequest(
                         "Test",
@@ -99,12 +99,12 @@ class NinjaServiceConcurrencyTest {
                         "White Belt",
                         null,
                         1,
-                        "act-1",
-                        8, // Activity sequence 8 (was 5, so delta = 3)
+                        "act-1", // Same activity as setup
                         null,
                         null,
                         null,
-                        null,
+                        8, // 8 completed steps (was 5, so delta = 3)
+                        10,
                         null,
                         null);
 
@@ -140,7 +140,7 @@ class NinjaServiceConcurrencyTest {
         // Verify: Calculate total balance from ledger
         Integer balance = ledgerTxnRepository.calculateBalance(facilityId, studentId);
 
-        // Expected: 3 activities * 1 (White Belt multiplier) = 3 bux
+        // Expected: 3 steps * 1 (White Belt multiplier) = 3 bux
         // If double-award happened, we'd see 6, 9, 12, or 15 bux
         assertThat(balance)
                 .isEqualTo(3)
@@ -148,22 +148,22 @@ class NinjaServiceConcurrencyTest {
                         "Expected balance of 3 bux (single award), but got %d (possible double-award)",
                         balance);
 
-        // Also verify ninja's lastActivitySequence is correctly updated
+        // Also verify ninja's lastCompletedSteps is correctly updated
         Ninja updated =
                 ninjaRepository.findByFacilityIdAndStudentId(facilityId, studentId).orElseThrow();
-        assertThat(updated.getLastActivitySequence()).isEqualTo(8);
+        assertThat(updated.getLastCompletedSteps()).isEqualTo(8);
 
-        // Verify only ONE activity reward transaction was created
-        long activityRewardCount =
+        // Verify only ONE step reward transaction was created
+        long stepRewardCount =
                 ledgerTxnRepository
                         .findByFacilityIdAndStudentIdOrderByCreatedAtDesc(facilityId, studentId)
                         .stream()
                         .filter(txn -> txn.getType() == TxnType.ACTIVITY_REWARD)
                         .count();
-        assertThat(activityRewardCount)
+        assertThat(stepRewardCount)
                 .isEqualTo(1)
                 .withFailMessage(
-                        "Expected 1 activity reward transaction, but found %d", activityRewardCount);
+                        "Expected 1 step reward transaction, but found %d", stepRewardCount);
     }
 
     /**
@@ -244,16 +244,16 @@ class NinjaServiceConcurrencyTest {
                         "White Belt",
                         null,
                         1,
-                        "act-1",
-                        8,
+                        "act-1", // Same activity as setup
                         null,
                         null,
                         null,
-                        null,
+                        8, // 8 completed steps (was 5, so delta = 3)
+                        10,
                         null,
                         null);
 
-        // First sync should award
+        // First sync should award (3 steps * 1 = 3 bux)
         ninjaService.syncSingleNinjaLocal(facilityId, studentId, request);
         Integer balanceAfterFirst = ledgerTxnRepository.calculateBalance(facilityId, studentId);
         assertThat(balanceAfterFirst).isEqualTo(3);

@@ -9,6 +9,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Data access for {@link dev.jsmitty.bux.system.domain.ShopItem}.
+ *
+ * <p>Used by {@link dev.jsmitty.bux.system.service.ShopService} and the purchase flow.
+ */
 @Repository
 public interface ShopItemRepository extends JpaRepository<ShopItem, Long> {
     List<ShopItem> findByFacilityId(UUID facilityId);

@@ -6,6 +6,13 @@ import jakarta.persistence.Index;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * JPA entity for the {@code ninjas} table.
+ *
+ * <p>Holds Code Ninjas identity + progress state, plus a cached balance for fast reads. Updated
+ * by {@link dev.jsmitty.bux.system.service.NinjaService} during sync operations and read by
+ * leaderboard, ledger, and shop flows.
+ */
 @Entity
 @Table(
         name = "ninjas",
@@ -17,9 +24,11 @@ public class Ninja {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Code Ninjas student identifier (scoped by facility). */
     @Column(name = "student_id", nullable = false)
     private String studentId;
 
+    /** Facility UUID for multi-site isolation. */
     @Column(name = "facility_id", nullable = false)
     private UUID facilityId;
 
@@ -65,9 +74,15 @@ public class Ninja {
     @Column(name = "last_activity_sequence")
     private Integer lastActivitySequence;
 
+    /** Last completed steps from the prior sync, used to compute step deltas. */
+    @Column(name = "last_completed_steps")
+    private Integer lastCompletedSteps;
+
+    /** Timestamp of the last activity update from the upstream system. */
     @Column(name = "last_activity_updated_at")
     private LocalDateTime lastActivityUpdatedAt;
 
+    /** Cached sum of ledger transactions for quick reads. */
     @Column(name = "current_balance", nullable = false)
     private Integer currentBalance = 0;
 
@@ -220,6 +235,14 @@ public class Ninja {
 
     public void setLastActivitySequence(Integer lastActivitySequence) {
         this.lastActivitySequence = lastActivitySequence;
+    }
+
+    public Integer getLastCompletedSteps() {
+        return lastCompletedSteps;
+    }
+
+    public void setLastCompletedSteps(Integer lastCompletedSteps) {
+        this.lastCompletedSteps = lastCompletedSteps;
     }
 
     public LocalDateTime getLastActivityUpdatedAt() {

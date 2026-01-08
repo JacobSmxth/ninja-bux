@@ -10,6 +10,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Authentication endpoints for admins.
+ *
+ * <p>Public login endpoint that returns a JWT and facility access list.
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -20,6 +25,9 @@ public class AuthController {
         this.authService = authService;
     }
 
+    /**
+     * Authenticates an admin and returns a JWT on success.
+     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         try {

@@ -15,6 +15,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Admin-only management endpoints.
+ *
+ * <p>Requires a super admin for most operations. Uses {@link FacilityAccessChecker}
+ * to enforce permissions.
+ */
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
@@ -32,18 +38,21 @@ public class AdminController {
         this.accessChecker = accessChecker;
     }
 
+    /** Lists all admins (super admin only). */
     @GetMapping("/admins")
     public ResponseEntity<AdminListResponse> getAllAdmins() {
         accessChecker.checkSuperAdmin();
         return ResponseEntity.ok(adminService.getAllAdmins());
     }
 
+    /** Fetch a single admin by id (super admin only). */
     @GetMapping("/admins/{id}")
     public ResponseEntity<AdminResponse> getAdmin(@PathVariable Long id) {
         accessChecker.checkSuperAdmin();
         return ResponseEntity.ok(adminService.getAdmin(id));
     }
 
+    /** Create a new admin account (super admin only). */
     @PostMapping("/admins")
     public ResponseEntity<AdminResponse> createAdmin(
             @Valid @RequestBody CreateAdminRequest request) {
@@ -51,6 +60,7 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body(adminService.createAdmin(request));
     }
 
+    /** Update an admin's profile, password, and facility access (super admin only). */
     @PutMapping("/admins/{id}")
     public ResponseEntity<AdminResponse> updateAdmin(
             @PathVariable Long id, @Valid @RequestBody CreateAdminRequest request) {
@@ -58,6 +68,7 @@ public class AdminController {
         return ResponseEntity.ok(adminService.updateAdmin(id, request));
     }
 
+    /** Delete an admin (super admin only; cannot delete self). */
     @DeleteMapping("/admins/{id}")
     public ResponseEntity<Void> deleteAdmin(@PathVariable Long id) {
         accessChecker.checkSuperAdmin();
@@ -65,6 +76,7 @@ public class AdminController {
         return ResponseEntity.noContent().build();
     }
 
+    /** List all facilities (super admin only). */
     @GetMapping("/facilities")
     public ResponseEntity<List<FacilityResponse>> getAllFacilities() {
         accessChecker.checkSuperAdmin();
@@ -73,6 +85,7 @@ public class AdminController {
         return ResponseEntity.ok(facilities);
     }
 
+    /** Return the current authenticated admin. */
     @GetMapping("/me")
     public ResponseEntity<AdminResponse> getCurrentAdmin() {
         Long adminId = accessChecker.getCurrentAdminId();

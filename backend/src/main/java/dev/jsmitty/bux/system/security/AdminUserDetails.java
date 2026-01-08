@@ -13,6 +13,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * UserDetails wrapper around {@link dev.jsmitty.bux.system.domain.Admin}.
+ *
+ * <p>Exposes roles and facility access for authorization checks.
+ */
 public class AdminUserDetails implements UserDetails {
 
     private final Admin admin;

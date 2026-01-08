@@ -17,6 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Handles manual ledger adjustments and related reporting.
+ *
+ * <p>Creates both an adjustment record and the corresponding ledger transaction to keep
+ * balances consistent.
+ */
 @Service
 public class AdjustmentService {
 
@@ -36,6 +42,9 @@ public class AdjustmentService {
         this.ledgerService = ledgerService;
     }
 
+    /**
+     * Creates an adjustment for a ninja and mirrors it to the ledger.
+     */
     @Transactional
     public AdjustmentResponse createAdjustment(
             UUID facilityId, String studentId, Long adminId, AdjustmentRequest request) {

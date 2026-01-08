@@ -10,9 +10,17 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
+/**
+ * Authorization helper for facility-scoped access checks.
+ *
+ * <p>Used by controllers to enforce admin and super-admin permissions.
+ */
 @Component
 public class FacilityAccessChecker {
 
+    /**
+     * Resolves the current authenticated admin from the security context.
+     */
     public AdminUserDetails getCurrentAdmin() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof AdminUserDetails) {
@@ -25,6 +33,9 @@ public class FacilityAccessChecker {
         return getCurrentAdmin().getAdminId();
     }
 
+    /**
+     * Ensures the current admin can access the given facility.
+     */
     public void checkFacilityAccess(UUID facilityId) {
         AdminUserDetails admin = getCurrentAdmin();
         if (admin.isSuperAdmin()) {
@@ -36,6 +47,9 @@ public class FacilityAccessChecker {
         }
     }
 
+    /**
+     * Ensures the current admin is a super admin.
+     */
     public void checkSuperAdmin() {
         AdminUserDetails admin = getCurrentAdmin();
         if (!admin.isSuperAdmin()) {

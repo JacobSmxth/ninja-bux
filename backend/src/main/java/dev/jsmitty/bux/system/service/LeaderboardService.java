@@ -14,6 +14,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Builds leaderboard views for earning and spending over a time window.
+ *
+ * <p>Aggregates from ledger transactions and enriches entries with ninja display data.
+ */
 @Service
 public class LeaderboardService {
 

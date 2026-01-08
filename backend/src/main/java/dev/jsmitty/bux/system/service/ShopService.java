@@ -13,6 +13,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Shop catalog management for a facility.
+ *
+ * <p>Provides create/update/delete plus list views used by public shop endpoints and
+ * the purchase flow.
+ */
 @Service
 public class ShopService {
 

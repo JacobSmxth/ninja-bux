@@ -9,6 +9,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+/**
+ * Seeds default data for local/dev environments.
+ *
+ * <p>Creates a super admin on startup for non-test profiles.
+ */
 @Configuration
 public class DataInitializer {
 

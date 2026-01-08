@@ -4,11 +4,17 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
+/**
+ * Encapsulates belt-based reward configuration and point math.
+ *
+ * <p>Used by sync flows to compute initial balances and activity/level rewards.
+ */
 @Component
 public class PointCalculator {
 
     private record BeltConfig(int base, int perLevel, int multiplier, int progressionMultiplier) {}
 
+    /** Per-belt base, per-level, and multiplier values. */
     private static final Map<String, BeltConfig> BELT_CONFIGS =
             Map.of(
                     "White Belt", new BeltConfig(0, 10, 1, 10),

@@ -16,6 +16,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Data access for {@link dev.jsmitty.bux.system.domain.Ninja}.
+ *
+ * <p>Used by {@link dev.jsmitty.bux.system.service.NinjaService} for sync operations and by
+ * other services (ledger, purchases, leaderboard) for lookups.
+ */
 @Repository
 public interface NinjaRepository extends JpaRepository<Ninja, Long> {
     Page<Ninja> findByFacilityId(UUID facilityId, Pageable effective);

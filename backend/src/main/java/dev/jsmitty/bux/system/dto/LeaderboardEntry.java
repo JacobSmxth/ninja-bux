@@ -1,5 +1,8 @@
 package dev.jsmitty.bux.system.dto;
 
+/**
+ * Leaderboard entry representing either earned or spent totals.
+ */
 public record LeaderboardEntry(
         int rank,
         String studentId,
